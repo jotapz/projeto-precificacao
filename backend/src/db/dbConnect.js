@@ -1,5 +1,3 @@
-// backend/src/db/dbConnect.js
-
 import mongoose from "mongoose";
 
 async function conectaNaDatabase() {
