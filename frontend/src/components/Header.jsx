@@ -1,4 +1,5 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { Link } from 'react-router-dom';
 
 function Header() {
   return (
@@ -29,14 +30,24 @@ function Header() {
           </button>
           <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
             <ul className="navbar-nav gap-4 fs-5">
+
+
               <li className="nav-item">
-                <a className="nav-link text-dark fw-medium" href="#">Início</a>
+                <Link to="/" className="nav-link text-dark fw-medium">
+                Início
+                </Link>
               </li>
+
+
               <li className="nav-item">
                 <a className="nav-link text-dark fw-medium" href="#">Sobre</a>
               </li>
+
+
               <li className="nav-item">
-                <a className="nav-link text-dark fw-medium" href="#">Entrar</a>
+                <Link to="/login" className="nav-link text-dark fw-medium">
+                Entrar
+                </Link>
               </li>
             </ul>
           </div>
