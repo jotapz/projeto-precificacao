@@ -30,13 +30,11 @@ function HeaderProfile() {
           <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
             <ul className="navbar-nav gap-4 fs-5">
 
-
-              <li className="nav-item">
+            <li className="nav-item">
+              <Link to="/profile-popup" className="button-profile" aria-label="Abrir perfil">
                 <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile" width="60" height="60" className="rounded-circle"/>
-              </li>
-
-
-              
+              </Link>
+            </li> 
             </ul>
           </div>
         </div>
