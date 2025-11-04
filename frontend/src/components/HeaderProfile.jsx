@@ -1,7 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link } from 'react-router-dom';
 
-function Header() {
+function HeaderProfile() {
   return (
     <header className="bg-white bg-opacity-75 py-3 shadow-sm">
       <nav className="navbar navbar-expand-lg navbar-light">
@@ -32,22 +32,11 @@ function Header() {
 
 
               <li className="nav-item">
-                <Link to="/" className="nav-link text-dark fw-medium">
-                Início
-                </Link>
+                <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile" width="60" height="60" className="rounded-circle"/>
               </li>
 
 
-              <li className="nav-item">
-                <a className="nav-link text-dark fw-medium" href="#">Sobre</a>
-              </li>
-
-
-              <li className="nav-item">
-                <Link to="/login" className="nav-link text-dark fw-medium">
-                Entrar
-                </Link>
-              </li>
+              
             </ul>
           </div>
         </div>
@@ -56,4 +45,4 @@ function Header() {
   );
 }
 
-export default Header;
+export default HeaderProfile;
