@@ -1,4 +1,6 @@
+//implementação das chamadas pra API
 import "bootstrap/dist/css/bootstrap.min.css";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
@@ -6,11 +8,29 @@ import Header from "../components/Header";
 
 function Login() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
 
-  function handleLogin(e) {
+  async function handleLogin(e) {
     e.preventDefault();
-    alert("Login realizado com sucesso!");
-    navigate("/"); // volta pra home
+    try {
+  const res = await fetch("http://localhost:3000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, senha })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || "Login realizado com sucesso!");
+        navigate("/"); // volta pra home
+      } else {
+        alert(data.message || "Falha ao logar");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro de conexão com o servidor.");
+    }
   }
 
   function sistemaPrec() {
@@ -30,11 +50,11 @@ function Login() {
 
         <form onSubmit={handleLogin}>
           <div className="mb-3 d-flex justify-content-center">
-            <input type="email" className="form-control rounded-4 py-2 px-3" style={{width: "80%", maxWidth: "500px"}} placeholder="Digite seu email" required />
+            <input value={email} onChange={e => setEmail(e.target.value)} type="email" className="form-control rounded-4 py-2 px-3" style={{width: "80%", maxWidth: "500px"}} placeholder="Digite seu email" required />
           </div>
 
           <div className="mb-3 d-flex justify-content-center">
-            <input type="password" className="form-control rounded-4 py-2 px-3" style={{width: "80%", maxWidth: "500px"}} placeholder="Digite sua senha" required />
+            <input value={senha} onChange={e => setSenha(e.target.value)} type="password" className="form-control rounded-4 py-2 px-3" style={{width: "80%", maxWidth: "500px"}} placeholder="Digite sua senha" required />
           </div>
 
           <button type="submit" className="btn btn-primary" style={{width: "80%", maxWidth: "200px"}}>
