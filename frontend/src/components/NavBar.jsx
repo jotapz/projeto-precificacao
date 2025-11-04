@@ -5,6 +5,10 @@ import CardCusto from "./CardCusto";
 import CardPrecificacao from "./CardPrecificacao";
 import { NavLink } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import Materiaprima from "./Materiaprimapage";
+import ProdutoPage from "./ProdutoPage";
+import CustosPage from "./CustosPage";
+import PrecificacaoPage from "./PrecificacaoPage";
 
 
 function NavBar() {
@@ -12,6 +16,13 @@ function NavBar() {
   const [mostrarCard1, setMostrarCard1] = useState(false);
   const [mostrarCard2, setMostrarCard2] = useState(false);
   const [mostrarCard3, setMostrarCard3] = useState(false);
+  const [ativo, setAtivo] = useState("materia");
+
+  const handleClick = (nome) => {
+    if (ativo !== nome) {
+      setAtivo(nome);
+    }
+  };
   
   
 
@@ -24,19 +35,15 @@ function NavBar() {
         >
           <div className="d-flex align-items-center" style={{ gap: "0.5rem" }}>
 
-            <NavLink
-              to="/materia-prima"
-              end
-              className={({ isActive }) =>
-                `nav-link text-white fw-semibold ${
-                  isActive ? "border-bottom border-2 border-white" : ""
-                }`
-              }
+            <button
+              onClick={() => handleClick("materia")}
+              className={`bg-transparent border-0 text-white font-bold focus:outline-none ${
+              ativo === "materia" ? "border-bottom border-white" : ""
+            }`}
             >
               Matéria-Prima
-            </NavLink>
+            </button>
 
-            {/* Ícone que mostra o Card ao passar o mouse */}
             <button
               type="button"
               className="btn btn-link text-white p-0"
@@ -58,16 +65,14 @@ function NavBar() {
           </div>
            <div className="d-flex align-items-center" style={{ gap: "0.5rem" }}>
             
-            <NavLink
-              to="/custos"
-              className={({ isActive }) =>
-                `nav-link text-white fw-semibold ${
-                  isActive ? "border-bottom border-2 border-white" : ""
-                }`
-              }
+            <button
+              onClick={() => handleClick("custo")}
+              className={`bg-transparent border-0 text-white font-bold focus:outline-none ${
+              ativo === "custo" ? "border-bottom border-white" : ""
+            }`}
             >
               Custos
-            </NavLink>
+            </button>
             <button
               type="button"
               className="btn btn-link text-white p-0"
@@ -88,16 +93,14 @@ function NavBar() {
             </button>
            </div>
            <div className="d-flex align-items-center" style={{ gap: "0.5rem" }}>
-            <NavLink
-              to="/produtos"
-              className={({ isActive }) =>
-                `nav-link text-white fw-semibold ${
-                  isActive ? "border-bottom border-2 border-white" : ""
-                }`
-              }
+            <button
+              onClick={() => handleClick("produto")}
+              className={`bg-transparent border-0 text-white font-bold focus:outline-none ${
+              ativo === "produto" ? "border-bottom border-white" : ""
+            }`}
             >
               Produtos
-            </NavLink>
+            </button>
 
             <button
               type="button"
@@ -120,16 +123,14 @@ function NavBar() {
 
            </div>
            <div className="d-flex align-items-center" style={{ gap: "0.5rem" }}>
-            <NavLink
-              to="/precificacao"
-              className={({ isActive }) =>
-                `nav-link text-white fw-semibold ${
-                  isActive ? "border-bottom border-2 border-white" : ""
-                }`
-              }
+            <button
+              onClick={() => handleClick("precificacao")}
+              className={`bg-transparent border-0 text-white font-bold focus:outline-none ${
+              ativo === "precificacao" ? "border-bottom border-white" : ""
+            }`}
             >
-              Sistema de Precificação
-            </NavLink>
+              Calculadora de preços
+            </button>
             <button
               type="button"
               className="btn btn-link text-white p-0"
@@ -152,7 +153,6 @@ function NavBar() {
         </div>
       </nav>
 
-      {/* Card aparece apenas enquanto o mouse estiver sobre o botão */}
       {mostrarCard && (
         <div className="position-absolute " style={{ zIndex: 1000, marginLeft: "9rem" }}>
           <CardProduto />
@@ -175,7 +175,19 @@ function NavBar() {
           <CardPrecificacao />
         </div>
       )}
+    
+    <div className="mt-4 d-flex justify-content-inter">
+        {ativo === "materia" && <Materiaprima />}
+        {ativo === "produto" && <ProdutoPage />}
+        {ativo === "custo" && <CustosPage />}
+        {ativo === "precificacao" && <PrecificacaoPage />}
+      </div>
+    
     </div>
+
+
+
+
   );
 }
 

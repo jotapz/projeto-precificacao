@@ -13,6 +13,10 @@ function Login() {
     navigate("/"); // volta pra home
   }
 
+  function sistemaPrec() {
+    navigate("/SistemaPrec");
+  }
+
   return (
     <div className="">
       <Header />
@@ -37,6 +41,9 @@ function Login() {
             Entrar
           </button>
         </form>
+        <button onClick={sistemaPrec} className="btn btn-secondary mt-3" style={{width: "80%", maxWidth: "200px"}}>
+            Acessar Sistema de Precificação
+          </button>
         <div className="text-center mt-3">
             <p>Não possui conta? <Link to="/registrar">Cadastre-se</Link> </p>
         </div>

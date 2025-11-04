@@ -7,6 +7,7 @@ import Footer from './components/Footer.jsx'
 import Header from './components/Header.jsx'
 import Login from './pages/Login.jsx'
 import Registrar from './pages/Registrar.jsx'
+import SistemaPrec from './pages/SistemaPrec.jsx'
 
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
@@ -22,6 +23,7 @@ function App() {
           <Route path="/" element={<Inicio />} />
           <Route path="/Login" element={<Login/>} />
           <Route path="/Registrar" element={<Registrar/>}/>
+          <Route path="/SistemaPrec" element={<SistemaPrec/>}/>
         </Routes>
       </div>
     </Router>
