@@ -1,17 +1,57 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 
 const estadoInicialFormulario = {
   nome: '',
-  valor: ''
+  valorMensal: ''  // Alterado de 'valor' para 'valorMensal' para corresponder ao backend
 };
 
+const API_URL = 'http://localhost:3000/api';
+
 function CustosPage() {
+  const navigate = useNavigate();
+  // Recupera o ID do usuário do localStorage
+  const userId = localStorage.getItem('userId');
 
-
+  // Se não houver userId, redireciona para login
+  useEffect(() => {
+    if (!userId) {
+      alert('Você precisa fazer login para acessar esta página');
+      navigate('/login');
+    }
+  }, [userId, navigate]);
 
   const [custos, setCustos] = useState([]);
   const [despesas, setDespesas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Carregar custos e despesas ao montar o componente
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [custosResponse, despesasResponse] = await Promise.all([
+          fetch(`${API_URL}/custos/user/${userId}`),
+          fetch(`${API_URL}/despesas/user/${userId}`)
+        ]);
+
+        const custosData = await custosResponse.json();
+        const despesasData = await despesasResponse.json();
+
+        setCustos(custosData);
+        setDespesas(despesasData);
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        alert('Erro ao carregar custos e despesas. Por favor, tente novamente.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId) {
+      fetchData();
+    }
+  }, [userId]);
 
 
   const [showModal, setShowModal] = useState(false);
@@ -39,10 +79,13 @@ function CustosPage() {
 
 
   const handleShowModalEditar = (type, index) => {
-
     const itemParaEditar = type === 'custo' ? custos[index] : despesas[index];
     
-    setFormData(itemParaEditar);
+    // Prepara o formulário com os dados existentes
+    setFormData({
+      nome: itemParaEditar.nome,
+      valorMensal: itemParaEditar.valorMensal.toString()
+    });
     setEditingIndex(index);
     setCurrentType(type);
     setShowModal(true);
@@ -58,30 +101,90 @@ function CustosPage() {
   };
 
  
-  const handleSubmit = () => {
-    const setList = currentType === 'custo' ? setCustos : setDespesas;
-    const list = currentType === 'custo' ? custos : despesas;
+  const handleSubmit = async () => {
+    try {
+      const endpoint = currentType === 'custo' ? 'custos' : 'despesas';
+      const item = {
+        ...formData,
+        valorMensal: Number(formData.valorMensal),
+        usuario: userId
+      };
 
-    if (editingIndex !== null) {
+      console.log('Dados sendo enviados:', {
+        endpoint,
+        data: item,
+        userId: userId
+      });
 
-      const listaAtualizada = list.map((item, index) => 
-        index === editingIndex ? formData : item
-      );
-      setList(listaAtualizada);
-    } else {
+      let response;
+      if (editingIndex !== null) {
+        // Editar item existente
+        const itemId = currentType === 'custo' 
+          ? custos[editingIndex]._id 
+          : despesas[editingIndex]._id;
 
-      setList(listaAnterior => [...listaAnterior, formData]);
+        console.log('Editando item:', itemId);
+        response = await fetch(`${API_URL}/${endpoint}/${itemId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item)
+        });
+      } else {
+        // Criar novo item
+        console.log('Criando novo item');
+        response = await fetch(`${API_URL}/${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item)
+        });
+      }
+
+      const responseData = await response.json();
+      console.log('Resposta da API:', responseData);
+
+      if (!response.ok) {
+        throw new Error(`Erro ao salvar: ${responseData.message || 'Erro desconhecido'}`);
+      }
+
+      // Recarregar a lista após sucesso
+      const listResponse = await fetch(`${API_URL}/${endpoint}/user/${userId}`);
+      const updatedList = await listResponse.json();
+      console.log('Lista atualizada:', updatedList);
+      
+      if (currentType === 'custo') {
+        setCustos(updatedList);
+      } else {
+        setDespesas(updatedList);
+      }
+
+      handleClose();
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      alert('Erro ao salvar. Por favor, tente novamente.');
     }
-    
-    handleClose();
   };
 
+  const handleExcluir = async (type, index) => {
+    try {
+      const endpoint = type === 'custo' ? 'custos' : 'despesas';
+      const list = type === 'custo' ? custos : despesas;
+      const itemId = list[index]._id;
 
-  const handleExcluir = (type, indexParaExcluir) => {
-    const setList = type === 'custo' ? setCustos : setDespesas;
-    setList(listaAnterior => 
-      listaAnterior.filter((_, index) => index !== indexParaExcluir)
-    );
+      const response = await fetch(`${API_URL}/${endpoint}/${itemId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao excluir');
+      }
+
+      // Atualizar estado local após exclusão bem-sucedida
+      const setList = type === 'custo' ? setCustos : setDespesas;
+      setList(prevList => prevList.filter((_, idx) => idx !== index));
+    } catch (error) {
+      console.error('Erro ao excluir:', error);
+      alert('Erro ao excluir. Por favor, tente novamente.');
+    }
   };
 
 
@@ -104,14 +207,16 @@ function CustosPage() {
         className="p-4 rounded shadow w-100 mt-3"
         style={{ minHeight: '100px', maxWidth: "1200px", backgroundColor: "#FFFFFF" }}
       >
-        {custos.length === 0 ? (
+        {loading ? (
+          <p className="text-secondary text-center">Carregando...</p>
+        ) : custos.length === 0 ? (
           <p className="text-secondary text-center">Nenhum Custo Operacional cadastrado.</p>
         ) : (
           custos.map((custo, index) => (
-            <div key={index} className="d-flex justify-content-between align-items-center p-3 border rounded mt-2 text-start">
+            <div key={custo._id || index} className="d-flex justify-content-between align-items-center p-3 border rounded mt-2 text-start">
               <div>
                 <span className="fw-bold">{custo.nome}</span><br/>
-                <small className="text-muted">Valor: R${custo.valor}</small>
+                <small className="text-muted">Valor Mensal: R${custo.valorMensal.toFixed(2)}</small>
               </div>
               <div>
                 <Button variant="link" size="sm" className="text-decoration-none" onClick={() => handleShowModalEditar('custo', index)}>
@@ -139,14 +244,16 @@ function CustosPage() {
         className="p-4 rounded shadow w-100 mt-3"
         style={{ minHeight: '100px', maxWidth: "1200px", backgroundColor: "#FFFFFF" }}
       >
-        {despesas.length === 0 ? (
+        {loading ? (
+          <p className="text-secondary text-center">Carregando...</p>
+        ) : despesas.length === 0 ? (
           <p className="text-secondary text-center">Nenhuma Despesa cadastrada.</p>
         ) : (
           despesas.map((despesa, index) => (
-            <div key={index} className="d-flex justify-content-between align-items-center p-3 border rounded mt-2 text-start">
+            <div key={despesa._id || index} className="d-flex justify-content-between align-items-center p-3 border rounded mt-2 text-start">
               <div>
                 <span className="fw-bold">{despesa.nome}</span><br/>
-                <small className="text-muted">Valor: R${despesa.valor}</small>
+                <small className="text-muted">Valor Mensal: R${despesa.valorMensal.toFixed(2)}</small>
               </div>
               <div>
                 <Button variant="link" size="sm" className="text-decoration-none" onClick={() => handleShowModalEditar('despesa', index)}>
@@ -176,18 +283,20 @@ function CustosPage() {
                 name="nome"
                 value={formData.nome} 
                 onChange={handleChange}
+                required
               />
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="formValor">
-              <Form.Label>Valor (R$)</Form.Label>
+              <Form.Label>Valor Mensal (R$)</Form.Label>
               <Form.Control 
                 type="number" 
                 placeholder="500.00" 
                 step="0.01"
-                name="valor"
-                value={formData.valor}
+                name="valorMensal"
+                value={formData.valorMensal}
                 onChange={handleChange}
+                required
               />
             </Form.Group>
           </Form>
