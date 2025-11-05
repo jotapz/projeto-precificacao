@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import React, {useState, useRef, useEffect} from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import ProfileMenu from "./ProfileMenu";
 
@@ -49,6 +49,7 @@ function HeaderProfile() {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
+
           <div
             className="collapse navbar-collapse justify-content-end flex-grow-0"
             id="navbarNav"
@@ -62,7 +63,7 @@ function HeaderProfile() {
                   width="60"
                   height="60"
                   className="rounded-circle button-profile"
-                  style={{cursor: 'pointer'}}
+                  style={{ cursor: "pointer" }}
                   onClick={() => setShowMenu(!showMenu)}
                 />
                 {showMenu && <ProfileMenu />}
