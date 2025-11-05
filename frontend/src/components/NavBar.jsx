@@ -28,7 +28,7 @@ function NavBar() {
 
   return (
     <div>
-      <nav className="p-3 mb-2 bg-primary text-white">
+      <nav className="p-3 mb-2 text-white" style={{ backgroundColor: "#044CF4", boxShadow: "0 5px 10px rgba(0, 0, 0, 0.35)" }}>
         <div
           className="container-fluid d-flex justify-content-center"
           style={{ gap: "7rem", fontSize: "1.4rem" }}
@@ -38,8 +38,7 @@ function NavBar() {
             <button
               onClick={() => handleClick("materia")}
               className={`bg-transparent border-0 text-white font-bold focus:outline-none ${
-              ativo === "materia" ? "border-bottom border-white" : ""
-            }`}
+              ativo === "materia" ? "border-bottom border-white" : ""}`}
             >
               Matéria-Prima
             </button>
@@ -155,19 +154,19 @@ function NavBar() {
 
       {mostrarCard && (
         <div className="position-absolute " style={{ zIndex: 1000, marginLeft: "9rem" }}>
-          <CardProduto />
+          <CardMateria />
         </div>
       )}
 
       {mostrarCard1 && (
         <div className="position-absolute " style={{ zIndex: 1000, marginLeft: "25rem" }}>
-          <CardMateria />
+          <CardCusto />
         </div>
       )}
 
       {mostrarCard2 && (
         <div className="position-absolute " style={{ zIndex: 1000, marginLeft: "39rem" }}>
-          <CardCusto />
+          <CardProduto />
         </div>
       )}
       {mostrarCard3 && (

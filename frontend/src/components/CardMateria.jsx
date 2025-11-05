@@ -4,7 +4,7 @@ function CardMateria() {
   return (
     <div className="card border-info mb-3" style={{ maxWidth: "18rem" }}>
       <div className="card-header d-flex align-items-center justify-content-between">
-        Header
+        Matéria-Prima
         {/* ícone via classe bi (garanta import bootstrap-icons no main.jsx) */}
         <i
           className="bi bi-info-circle"
@@ -15,9 +15,8 @@ function CardMateria() {
         ></i>
       </div>
       <div className="card-body text-info">
-        <h5 className="card-title">Materia</h5>
-        <p className="card-text">
-          Some quick example text to build on the card title and make up the bulk of the card's content.
+        <p className="card-text text-primary fw-bold">
+          Aqui você cadastra todos os insumos usados na produção dos seus produtos. Inclua informações como nome, quantidade, unidade de medida e custo por unidade. Esses dados serão usados mais tarde para calcular automaticamente o custo de produção de cada item.
         </p>
       </div>
     </div>

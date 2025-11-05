@@ -6,7 +6,7 @@ function HeaderProfile() {
     <header className="bg-white bg-opacity-75 py-3 shadow-sm">
       <nav className="navbar navbar-expand-lg navbar-light">
         <div className="container-fluid px-5">
-          <a href="#" className="navbar-brand d-flex align-items-center gap-3 text-primary fw-bold fs-2 ms-3">
+          <a href="#" className="navbar-brand d-flex align-items-center gap-3 fw-bold fs-2 ms-3" style={{color: "#044CF4"}}>
             <img
               src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTM12yH_4BpgheFunQXK6xLspQb7USkO-kkNQ&s"
               alt="Logo"
@@ -15,6 +15,8 @@ function HeaderProfile() {
             />
             NAF
           </a>
+
+          <h1 className="fw-normal">Sistema Precificação</h1>
 
           <button
             className="navbar-toggler"
@@ -27,7 +29,7 @@ function HeaderProfile() {
           >
             <span className="navbar-toggler-icon"></span>
           </button>
-          <div className="collapse navbar-collapse justify-content-end" id="navbarNav">
+          <div className="collapse navbar-collapse justify-content-end flex-grow-0" id="navbarNav">
             <ul className="navbar-nav gap-4 fs-5">
 
             <li className="nav-item">
