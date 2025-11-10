@@ -6,7 +6,7 @@ function Header() {
     <header className="bg-white bg-opacity-75 py-3 shadow-sm">
       <nav className="navbar navbar-expand-lg navbar-light">
         <div className="container-fluid px-5">
-          <a href="#" className="navbar-brand d-flex align-items-center gap-3 text-primary fw-bold fs-2 ms-3">
+          <a href="#" className="navbar-brand d-flex align-items-center gap-3 fw-bold fs-2 ms-3" style={{ color: "#044CF4" }}>
             <img
               src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTM12yH_4BpgheFunQXK6xLspQb7USkO-kkNQ&s"
               alt="Logo"

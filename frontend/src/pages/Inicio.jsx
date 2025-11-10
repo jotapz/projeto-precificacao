@@ -4,7 +4,7 @@ import Header from "../components/Header";
 
 function Inicio() {
   return (
-    <div>
+    <div className="fade-in">
       <Header />
       <div className="text-center mt-5">
         <h1 className="text-primary fw-bold">NAF</h1>

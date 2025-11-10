@@ -40,9 +40,9 @@ function Login() {
   }
 
   return (
-    <div className="">
+    <div className="fade-in">
       <Header />
-    <div className="bg-primary d-flex justify-content-center align-items-center vh-100">
+    <div className="d-flex justify-content-center align-items-center vh-100" style={{ backgroundColor: "#044CF4"}}>
       
       <div
         className="bg-white p-4 rounded shadow w-100 text-center"
