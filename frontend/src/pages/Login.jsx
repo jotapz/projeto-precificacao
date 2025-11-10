@@ -48,7 +48,7 @@ function Login() {
         <div
           className="bg-white p-4 rounded-4 shadow w-100 text-center"
           style={{ maxWidth: "700px", justifyContent: "center", minHeight: "400px" }}
-          data-aos="fade-in">
+          data-aos="zoom-in">
           <h2 className="text-center mb-2 mt-5 fw-bold">Login</h2>
           <hr className="mx-auto opacity-25" style={{ width: "45%", color: "gray" }} />
 
