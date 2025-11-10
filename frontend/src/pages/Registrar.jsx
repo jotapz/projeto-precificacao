@@ -42,7 +42,7 @@ function Registrar() {
   }
 
   return (
-    <div>
+    <div className="fade-in">
       <Header />
     <div className="bg-primary d-flex justify-content-center align-items-center vh-100">
       <div
