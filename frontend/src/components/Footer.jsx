@@ -4,7 +4,7 @@ import 'bootstrap-icons/font/bootstrap-icons.css';
 
 function Footer() {
   return (
-    <footer className="bg-primary text-white py-4 mt-5">
+    <footer className=" text-white py-4 mt-5" style={{ backgroundColor: "#0036B3" }}>
       <div className="container">
         <div className="row text-center text-md-start">
           <div className="col-md-4 mb-3">

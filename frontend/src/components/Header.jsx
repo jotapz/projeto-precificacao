@@ -31,19 +31,19 @@ function Header() {
             <ul className="navbar-nav gap-4 fs-5">
 
 
-              <li className="nav-item">
+              <li className="nav-item btn-hover-lift rounded-pill">
                 <Link to="/" className="nav-link text-dark fw-medium">
                 Início
                 </Link>
               </li>
 
 
-              <li className="nav-item">
+              <li className="nav-item btn-hover-lift rounded-pill">
                 <a className="nav-link text-dark fw-medium" href="#">Sobre</a>
               </li>
 
 
-              <li className="nav-item">
+              <li className="nav-item btn-hover-lift rounded-pill">
                 <Link to="/login" className="nav-link text-dark fw-medium">
                 Entrar
                 </Link>

@@ -1,9 +1,8 @@
-//implementação das chamadas pra API
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
 import Header from "../components/Header";
+import { FaEye, FaEyeSlash, FaArrowLeft } from "react-icons/fa";
 
 function Registrar() {
   const navigate = useNavigate();
@@ -13,6 +12,8 @@ function Registrar() {
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [cpf, setCpf] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 
   async function handleRegistro(e) {
     e.preventDefault();
@@ -22,10 +23,10 @@ function Registrar() {
     }
 
     try {
-  const res = await fetch("http://localhost:3000/api/usuarios", {
+      const res = await fetch("http://localhost:3000/api/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, email, senha, confirmarSenha, bairro, cpf })
+        body: JSON.stringify({ nome, email, senha, confirmarSenha, bairro, cpf }),
       });
 
       const data = await res.json();
@@ -42,53 +43,47 @@ function Registrar() {
   }
 
   return (
-    <div className="fade-in">
+    <div className="">
       <Header />
-    <div className="bg-primary d-flex justify-content-center align-items-center vh-100">
-      <div
-        className="bg-white p-4 rounded shadow w-100 text-center"
-        style={{ maxWidth: "600px"}}
-
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-arrow-left-short form-label align-self-start" viewBox="0 0 16 16" style={{cursor: "pointer", position: "relative", right: "270px", bottom: "10px",}} onClick={() => navigate(-1)}>
-          <path fill-rule="evenodd" d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5"/>
-        </svg>
-        <h2 className="text-center mb-4 text-primary fw-bold">Registro</h2>
-
-        <form onSubmit={handleRegistro}>
-
-          <div className="mb-3 d-flex justify-content-center">
-            <input value={nome} onChange={e => setNome(e.target.value)} type="text" className="form-control rounded-4 py-2 px-3" style={{width: "80%", maxWidth: "500px"}} placeholder="Digite seu nome completo" required />
-          </div>
-
-          <div className="mb-3 d-flex justify-content-center">
-            <input value={email} onChange={e => setEmail(e.target.value)} type="email" className="form-control rounded-4 py-2 px-3" style={{width: "80%", maxWidth: "500px"}} placeholder="Digite seu e-mail" required />
-          </div>
-
-          <div className="mb-3 d-flex justify-content-center">
-            <input value={bairro} onChange={e => setBairro(e.target.value)} type="text" className="form-control rounded-4 py-2 px-3" style={{width: "80%", maxWidth: "500px"}} placeholder="Digite sua Bairro" required />
-          </div>
-
-          <div className="mb-3 d-flex justify-content-center">
-            <input value={senha} onChange={e => setSenha(e.target.value)} type="password" className="form-control rounded-4 py-2 px-3" style={{width: "80%", maxWidth: "500px"}} placeholder="Digite sua senha" required />
-          </div>
-
-          <div className="mb-3 d-flex justify-content-center">
-
-          <input value={confirmarSenha} onChange={e => setConfirmarSenha(e.target.value)} type="password" className="form-control rounded-4 py-2 px-3" style={{width: "80%", maxWidth: "500px"}} placeholder="Confirme sua senha" required />
-          </div>
-          <div className="mb-3 d-flex flex-column align-items-center">
-            <label className="form-label align-self-start" style={{ width: "80%", maxWidth: "200px" }}>* Opcional</label>
-            <input value={cpf} onChange={e => setCpf(e.target.value)} type="text" className="form-control rounded-4 py-2 px-3" style={{width: "80%", maxWidth: "500px"}} placeholder="Digite seu CPF" />
-          </div>
-
-          <button type="submit" className="btn btn-primary" style={{width: "80%", maxWidth: "200px"}}>
-            Registrar
-          </button>
-        </form>
-        
+      <div className="d-flex justify-content-center align-items-center" style={{ backgroundColor: "#004AF7", minHeight: "100vh", padding: "20px 0" }}>
+        <div className="bg-white p-5 rounded-4 shadow w-100 text-center position-relative" style={{ maxWidth: "600px" }} data-aos="zoom-in">
+          <FaArrowLeft size={20} className="position-absolute text-primary" style={{ top: "30px", left: "30px", cursor: "pointer" }} onClick={() => navigate(-1)} />
+          <h2 className="fw-bold mb-3 mt-2">Registro</h2>
+          <hr className="mx-auto opacity-25" style={{ width: "60%", color: "#ccc", borderTop: "2px solid" }} />
+          <form onSubmit={handleRegistro} className="mt-4">
+            <div className="mb-3 d-flex justify-content-center">
+              <input value={nome} onChange={(e) => setNome(e.target.value)} type="text" className="form-control rounded-pill p-3 bg-light border-0 shadow-sm" style={{ width: "90%" }} placeholder="Digite seu nome completo" required />
+            </div>
+            <div className="mb-3 d-flex justify-content-center">
+              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" className="form-control rounded-pill p-3 bg-light border-0 shadow-sm" style={{ width: "90%" }} placeholder="Digite seu e-mail" required />
+            </div>
+            <div className="mb-3 d-flex justify-content-center">
+              <input value={bairro} onChange={(e) => setBairro(e.target.value)} type="text" className="form-control rounded-pill p-3 bg-light border-0 shadow-sm" style={{ width: "90%" }} placeholder="Digite seu Bairro" required />
+            </div>
+            <div className="mb-3 d-flex justify-content-center">
+              <div className="input-group shadow-sm rounded-pill overflow-hidden" style={{ width: "90%" }}>
+                <input value={senha} onChange={(e) => setSenha(e.target.value)} type={mostrarSenha ? "text" : "password"} className="form-control bg-light border-0 p-3" style={{ boxShadow: "none" }} placeholder="Digite sua senha" required />
+                <button type="button" className="btn btn-light border-0 px-3 d-flex align-items-center" onClick={() => setMostrarSenha(!mostrarSenha)}>
+                  {mostrarSenha ? <FaEyeSlash color="gray" /> : <FaEye color="gray" />}
+                </button>
+              </div>
+            </div>
+            <div className="mb-3 d-flex justify-content-center">
+              <div className="input-group shadow-sm rounded-pill overflow-hidden" style={{ width: "90%" }}>
+                <input value={confirmarSenha} onChange={(e) => setConfirmarSenha(e.target.value)} type={mostrarConfirmarSenha ? "text" : "password"} className="form-control bg-light border-0 p-3" style={{ boxShadow: "none" }} placeholder="Confirme sua senha" required />
+                <button type="button" className="btn btn-light border-0 px-3 d-flex align-items-center" onClick={() => setMostrarConfirmarSenha(!mostrarConfirmarSenha)}>
+                  {mostrarConfirmarSenha ? <FaEyeSlash color="gray" /> : <FaEye color="gray" />}
+                </button>
+              </div>
+            </div>
+            <div className="mb-4 d-flex flex-column align-items-center">
+              <div style={{ width: "90%" }} className="text-start mb-1"><small className="text-muted ms-3">* Opcional</small></div>
+              <input value={cpf} onChange={(e) => setCpf(e.target.value)} type="text" className="form-control rounded-pill p-3 bg-light border-0 shadow-sm" style={{ width: "90%" }} placeholder="Digite seu CPF" />
+            </div>
+            <button type="submit" className="btn btn-primary rounded-pill py-3 fw-bold btn-hover-lift mx-auto d-block" style={{ width: "80%", maxWidth: "150px", backgroundColor: "#004AF7" }}>Registrar</button>
+          </form>
+        </div>
       </div>
-    </div>
     </div>
   );
 }

@@ -6,3 +6,22 @@
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+
+.btn-hover-lift {
+  transition: all 0.3s ease;
+}
+
+.btn-hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+
+.text-shadow-sm {
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.text-shadow-md {
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
