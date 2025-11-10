@@ -192,7 +192,7 @@ function CustosPage() {
   const modalTitle = (editingIndex !== null ? 'Editar' : 'Adicionar') + (currentType === 'custo' ? ' Custo Operacional' : ' Despesa');
 
   return (
-    <div className="container-fluid" style={{ maxWidth: "1200px", justifyContent: "center" }}>
+    <div className="container-fluid fade-in" style={{ maxWidth: "1200px", justifyContent: "center" }}>
       
       
       <div className="d-flex justify-content-between align-items-center mt-4">

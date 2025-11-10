@@ -1,6 +1,6 @@
 function PrecificacaoPage() {
  return (
-   <div className="container-fluid"
+   <div className="container-fluid fade-in"
     style={{ maxWidth: "1200px", justifyContent: "center"}}>
      <div className="">
        <h3>Calculadora de Preços</h3>

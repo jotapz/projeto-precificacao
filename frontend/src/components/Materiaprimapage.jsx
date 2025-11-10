@@ -146,7 +146,7 @@ function Materiaprimapage() {
   };
 
   return (
-    <div className="container-fluid" style={{ maxWidth: "1200px", justifyContent: "center" }}>
+    <div className="container-fluid fade-in" style={{ maxWidth: "1200px", justifyContent: "center" }}>
       <div className="d-flex justify-content-between align-items-center mt-4">
         <h3>Matéria Prima</h3>
         <Button variant="primary" onClick={handleShow} style={{ backgroundColor: "#044CF4" }}>+ Adicionar Matéria-Prima</Button>

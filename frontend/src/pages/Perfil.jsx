@@ -1,9 +1,7 @@
-import "bootstrap/dist/css/bootstrap.min.css";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
-import Header from "../components/Header";
+import React from "react";
 
 function Perfil() {
-    <h1>oal</h1>
+  return <h2>Bem-vindo à página de Perfil!</h2>;
 }
+
+export default Perfil;
