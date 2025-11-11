@@ -10,6 +10,11 @@ const ingredienteSchema = new mongoose.Schema({
     type: Number, 
     required: true 
   },
+  unidade: {
+    type: String,
+    enum: ['kg', 'g', 'L', 'ml', 'unidade'],
+    required: false
+  },
   custoIngrediente: { 
     type: Number, 
     required: true 

@@ -6,9 +6,38 @@ import CustoOperacional from "../db/models/custoOperacional.js";
 
 class ProdutoController {
 
+    // Helper: normalize unit strings to allowed enum values
+    static _normalizeUnit(unit) {
+        if (!unit && unit !== '') return undefined;
+        const u = String(unit).trim().toLowerCase();
+        if (u === 'kg') return 'kg';
+        if (u === 'g') return 'g';
+        if (u === 'l' || u === 'lt' || u === 'ltr') return 'L';
+        if (u === 'ml') return 'ml';
+        if (u === 'un' || u === 'unidade' || u === 'unit') return 'unidade';
+        return unit; // fallback as-is
+    }
+
+    // Helper: convert quantity from `fromUnit` to `toUnit` (supports g<->kg and ml<->L)
+    static _convertQuantity(quantity, fromUnit, toUnit) {
+        if (quantity == null || isNaN(quantity)) return 0;
+        if (!fromUnit || !toUnit) return Number(quantity);
+        const f = String(fromUnit).toLowerCase();
+        const t = String(toUnit).toLowerCase();
+        // grams <-> kilograms
+        if (f === 'g' && t === 'kg') return Number(quantity) / 1000;
+        if (f === 'kg' && t === 'g') return Number(quantity) * 1000;
+        // milliliters <-> liters
+        if (f === 'ml' && t === 'l') return Number(quantity) / 1000;
+        if (f === 'l' && t === 'ml') return Number(quantity) * 1000;
+        // same unit or unknown conversions
+        return Number(quantity);
+    }
+
+
   static cadastrarProduto = async (req, res) => {
     try {
-      const { 
+      const {      
         usuario, 
         nome, 
         unidade, 
@@ -28,11 +57,18 @@ class ProdutoController {
           if (!mp) {
             throw new Error(`Matéria-prima com ID ${ing.materiaPrima} não encontrada.`);
           }
-          const custoIngrediente = mp.valorUnitario * ing.quantidade;
+
+          // normalize units and convert provided quantity to MP unit when calculating cost
+          const providedUnit = ProdutoController._normalizeUnit(ing.unidade) || ProdutoController._normalizeUnit(mp.unidade);
+          const mpUnit = ProdutoController._normalizeUnit(mp.unidade);
+          const quantidadeForCost = ProdutoController._convertQuantity(Number(ing.quantidade), providedUnit, mpUnit);
+
+          const custoIngrediente = mp.valorUnitario * quantidadeForCost;
 
           return {
             materiaPrima: ing.materiaPrima,
-            quantidade: ing.quantidade,
+            quantidade: Number(ing.quantidade),
+            unidade: providedUnit,
             custoIngrediente: custoIngrediente
           };
         })
@@ -84,10 +120,16 @@ class ProdutoController {
             if (!mp) {
               throw new Error(`Matéria-prima com ID ${ing.materiaPrima} não encontrada.`);
             }
-            const custoIngrediente = mp.valorUnitario * ing.quantidade;
+
+            const providedUnit = ProdutoController._normalizeUnit(ing.unidade) || ProdutoController._normalizeUnit(mp.unidade);
+            const mpUnit = ProdutoController._normalizeUnit(mp.unidade);
+            const quantidadeForCost = ProdutoController._convertQuantity(Number(ing.quantidade), providedUnit, mpUnit);
+
+            const custoIngrediente = mp.valorUnitario * quantidadeForCost;
             return {
               materiaPrima: ing.materiaPrima,
-              quantidade: ing.quantidade,
+              quantidade: Number(ing.quantidade),
+              unidade: providedUnit,
               custoIngrediente: custoIngrediente
             };
           })
