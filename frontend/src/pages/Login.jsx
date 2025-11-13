@@ -23,8 +23,8 @@ function Login() {
 
       const data = await res.json();
       if (res.ok) {
-        // Salvar userId no localStorage
         localStorage.setItem('userId', data.usuario._id);
+        localStorage.setItem('usuario', JSON.stringify(data.usuario)); // armazena dados do usuário
         alert(data.message || "Login realizado com sucesso!");
         navigate("/SistemaPrec"); // redireciona para o sistema
       } else {

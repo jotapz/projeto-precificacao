@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import React, { useState, useRef, useEffect } from "react";
-import Profile from "./Profile";
 // import "bootstrap/dist/css/bootstrap.min.css";
 
 function ProfileMenu() {
@@ -32,9 +31,8 @@ function ProfileMenu() {
         <li
           className="list-group-item list-group-item-action"
           style={{ cursor: "pointer" }}
-          onClick={() => setShowProfile(!showProfile)}
         >
-          Perfil
+          <Link to="/Perfil" className="text-decoration-none text-black">Perfil</Link>
         </li>
         
 

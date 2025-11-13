@@ -3,6 +3,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import ProfileMenu from "./ProfileMenu";
 
+export const PROFILE_IMAGE = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
 function HeaderProfile() {
   const [showMenu, setShowMenu] = useState(false);
   const profileRef = useRef(null);
@@ -58,7 +60,7 @@ function HeaderProfile() {
             <ul className="navbar-nav gap-4 fs-5">
               <li className="nav-item">
                 <img
-                  src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                  src={PROFILE_IMAGE}
                   alt="Profile"
                   width="60"
                   height="60"
