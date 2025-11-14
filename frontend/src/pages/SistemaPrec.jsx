@@ -14,7 +14,7 @@ function SistemaPrec() {
     <div>
         <HeaderProfile />
         <div className="">
-            <NavBar />
+            <NavBar/>
       
       </div>
     </div>
