@@ -1,64 +1,56 @@
-
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; 
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-function Login() {
+function LoginAdmin() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [matricula, setMatricula] = useState("");
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  async function handleLogin(e) {
+  function handleLogin(e) {
     e.preventDefault();
-    try {
-      const res = await fetch("http://localhost:3000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, senha })
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem('userId', data.usuario._id);
-        localStorage.setItem('usuario', JSON.stringify(data.usuario)); 
-        alert(data.message || "Login realizado com sucesso!");
-        navigate("/SistemaPrec"); 
-      } else {
-        alert(data.message || "Falha ao logar");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Erro de conexão com o servidor.");
+    if (matricula.trim() !== "" && senha.trim() !== "") {
+        localStorage.setItem('userType', 'admin'); 
+        navigate("/admin-dashboard"); 
+    } else {
+        alert("Por favor, preencha matrícula e senha.");
     }
   }
 
   return (
-    <div className="">
+
+    <div className="d-flex flex-column vh-100 overflow-hidden">
+      
+
       <Header />
-      <div className="d-flex justify-content-center align-items-center vh-100" style={{ backgroundColor: "#004AF7" }}>
+      <div 
+        className="d-flex justify-content-center align-items-center flex-grow-1" 
+        style={{ backgroundColor: "#004AF7" }}
+      >
 
         <div
-          className="bg-white p-4 rounded-4 shadow w-100 text-center d-flex flex-column" 
+          className="bg-white p-4 rounded-4 shadow w-100 text-center d-flex flex-column"
           style={{ maxWidth: "700px", justifyContent: "center", minHeight: "400px" }}
           data-aos="zoom-in">
           
-          <h2 className="text-center mb-2 mt-4 fw-bold">Login</h2>
+          <h2 className="text-center mb-2 mt-4 fw-bold">Área Administrativa</h2>
+          <p className="text-muted small mb-0">Acesso restrito para colaboradores</p>
           <hr className="mx-auto opacity-25" style={{ width: "45%", color: "gray" }} />
 
           <form onSubmit={handleLogin}>
-          
+            
             <div className="mb-3 mt-4 d-flex justify-content-center">
               <input
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                type="email"
+                value={matricula}
+                onChange={e => setMatricula(e.target.value)}
+                type="text"
                 className="form-control rounded-4 py-2 px-3 bg-light shadow-sm border-0"
                 style={{ width: "80%", maxWidth: "300px" }}
-                placeholder="Digite seu email"
+                placeholder="Digite sua Matrícula"
                 required
               />
             </div>
@@ -85,34 +77,27 @@ function Login() {
             </div>
 
             <button type="submit" className="btn btn-primary rounded-pill mt-3 btn-hover-lift" style={{ width: "80%", maxWidth: "100px", backgroundColor: "#004AF7" }}>
-              Entrar
+              Acessar
             </button>
+
+            <button><Link to="/admin-dashboard">clica e vai</Link></button>
           </form>
 
-          
           <div className="text-center mt-4">
-            <p className="mb-3">
-              Não possui conta? <Link to="/registrar" className="fw-bold text-decoration-none">Cadastre-se</Link> 
-            </p>
-            
-            
             <div className="border-top pt-3 w-75 mx-auto">
-              <small className="text-muted d-block mb-1">É colaborador do NAF?</small>
-              <Link 
-                to="/login-admin"
-                className="btn btn-outline-primary btn-sm rounded-pill px-3"
-                style={{ fontSize: "0.85rem" }}
-              >
-                Acesso Administrativo
-              </Link>
+              <p className="mb-0 text-muted">
+                Não é administrador? <br/>
+                <Link to="/Login" className="fw-bold text-decoration-none" style={{ color: "#004AF7" }}>
+                   Voltar para Login de Usuário
+                </Link> 
+              </p>
             </div>
-           
-
           </div>
+
         </div>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default LoginAdmin;

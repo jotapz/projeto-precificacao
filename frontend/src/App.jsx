@@ -4,6 +4,9 @@ import Login from './pages/Login.jsx'
 import Registrar from './pages/Registrar.jsx'
 import SistemaPrec from './pages/SistemaPrec.jsx'
 import Perfil from './pages/Perfil.jsx'
+import LoginAdmin from './pages/LoginAdmin.jsx'
+import AdminDashboard from "./pages/AdminDashboard";
+
 
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
@@ -32,6 +35,10 @@ function App() {
           <Route path="/SistemaPrec" element={<SistemaPrec/>}/>
           <Route path="/Perfil" element={<Perfil/>}/>
           <Route path="/Login" element={<Login/>}/>
+
+          <Route path="/login-admin" element={<LoginAdmin />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          
         </Routes>
       </div>
     </Router>
