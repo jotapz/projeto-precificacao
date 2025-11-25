@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import Header from "../components/Header";
@@ -11,14 +11,64 @@ function LoginAdmin() {
   const [senha, setSenha] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
-  function handleLogin(e) {
-    e.preventDefault();
-    if (matricula.trim() !== "" && senha.trim() !== "") {
-        localStorage.setItem('userType', 'admin'); 
-        navigate("/admin-dashboard"); 
-    } else {
-        alert("Por favor, preencha matrícula e senha.");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [hasAdmins, setHasAdmins] = useState(true);
+
+  useEffect(() => {
+    // check if any admins exist -> allow bypass when none
+    async function checkAdmins() {
+      try {
+        const res = await fetch('http://localhost:3000/api/admin/exists');
+        if (!res.ok) return setHasAdmins(true);
+        const body = await res.json();
+        setHasAdmins(Boolean(body?.hasAdmins));
+      } catch (err) {
+        console.error('checkAdmins', err);
+        setHasAdmins(true);
+      }
     }
+    checkAdmins();
+  }, []);
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    setError(null);
+    if (matricula.trim() === "" || senha.trim() === "") {
+      setError("Por favor, preencha matrícula e senha.");
+      return;
+    }
+    try {
+      setLoading(true);
+      const res = await fetch('http://localhost:3000/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ matricula: matricula.trim(), senha })
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setError(body?.message || 'Falha ao autenticar');
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem('adminToken', body.token);
+      localStorage.setItem('userType', 'admin');
+      localStorage.setItem('adminInfo', JSON.stringify(body.admin));
+      setLoading(false);
+      navigate('/admin-dashboard');
+    } catch (err) {
+      console.error('login error', err);
+      setError('Erro de conexão');
+      setLoading(false);
+    }
+  }
+
+  function handleBypass() {
+    // temporary bypass for first setup (only visible when no admins)
+    localStorage.setItem('userType', 'admin');
+    localStorage.setItem('adminBypass', '1');
+    navigate('/admin-dashboard');
   }
 
   return (
@@ -76,11 +126,22 @@ function LoginAdmin() {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary rounded-pill mt-3 btn-hover-lift" style={{ width: "80%", maxWidth: "100px", backgroundColor: "#004AF7" }}>
-              Acessar
+            {error && (
+              <div className="alert alert-danger w-75 mx-auto" role="alert">{error}</div>
+            )}
+
+            <button type="submit" className="btn btn-primary rounded-pill mt-3 btn-hover-lift d-flex align-items-center justify-content-center" style={{ width: "80%", maxWidth: "140px", backgroundColor: "#004AF7" }} disabled={loading}>
+              {loading ? (<><span className="spinner-border spinner-border-sm me-2" />Acessando...</>) : 'Acessar'}
             </button>
 
-            <button><Link to="/admin-dashboard">clica e vai</Link></button>
+            {/* bypass button for initial setup */}
+            {!hasAdmins && (
+              <div className="mt-3">
+                <button type="button" className="btn btn-outline-secondary rounded-pill" onClick={handleBypass}>
+                  Entrar sem login (apenas enquanto não houver administradores)
+                </button>
+              </div>
+            )}
           </form>
 
           <div className="text-center mt-4">

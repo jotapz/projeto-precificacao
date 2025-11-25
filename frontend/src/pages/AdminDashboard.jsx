@@ -6,9 +6,14 @@ import { FaUserTie, FaUsers, FaTrash, FaEye, FaPlus } from "react-icons/fa";
 function AdminDashboard() {
   const navigate = useNavigate();
 
-  const [usuarios, setUsuarios] = useState([]); 
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState(null);     
+  const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [dashboard, setDashboard] = useState(null);
+  const [loadingDashboard, setLoadingDashboard] = useState(true);
+  const [admins, setAdmins] = useState([]);
+  const [creatingAdminLoading, setCreatingAdminLoading] = useState(false);
+  const [creatingAdminError, setCreatingAdminError] = useState(null);
 
   
   const [showDetalhes, setShowDetalhes] = useState(false);
@@ -39,8 +44,46 @@ function AdminDashboard() {
 
  
   useEffect(() => {
-    fetchUsuarios();
-  }, []);
+    const token = localStorage.getItem('adminToken');
+    const bypass = localStorage.getItem('adminBypass');
+
+    // If there is a token -> load protected dashboard + admin list
+    if (token) {
+      fetchUsuarios();
+      fetchDashboard(token);
+      fetchAdmins(token);
+      return;
+    }
+
+    // If bypass is active, use public dashboard so admin can enter without login
+    if (bypass) {
+      fetchUsuarios();
+      fetchDashboardPublic();
+      // admin list will not be available without token
+      return;
+    }
+
+    // If no token and no bypass, check if any admins exist. If none, allow public dashboard
+    (async () => {
+      try {
+        const r = await fetch('http://localhost:3000/api/admin/exists');
+        if (!r.ok) throw new Error('could not check admins');
+        const b = await r.json();
+        if (!b.hasAdmins) {
+          // no admins yet: allow public access to dashboard
+          fetchUsuarios();
+          fetchDashboardPublic();
+        } else {
+          // admins exist and there is no token: redirect to login
+          navigate('/login-admin');
+        }
+      } catch (error) {
+        console.error('admin existence check error', error);
+        // fallback: try loading users
+        fetchUsuarios();
+      }
+    })();
+  }, [navigate]);
 
 
   const excluirUsuario = async (id) => {
@@ -77,11 +120,81 @@ function AdminDashboard() {
     setShowDetalhes(true);
   };
 
-  const salvarAdmin = () => {
-    
-    alert(`Administrador ${novoAdmin.nome} cadastrado com sucesso (Simulação)!`);
-    setShowNovoAdmin(false);
-    setNovoAdmin({ nome: "", matricula: "", senha: "" });
+  // NOTE: real creation is handled by salvarAdminReal
+
+  // new implementation: POST to backend and refresh admin list
+  const salvarAdminReal = async () => {
+    setCreatingAdminError(null);
+    if (!novoAdmin.nome || !novoAdmin.matricula || !novoAdmin.senha) {
+      setCreatingAdminError('Todos os campos são obrigatórios');
+      return;
+    }
+    setCreatingAdminLoading(true);
+    try {
+      const token = localStorage.getItem('adminToken');
+      const res = await fetch('http://localhost:3000/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ nome: novoAdmin.nome, matricula: novoAdmin.matricula, senha: novoAdmin.senha })
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setCreatingAdminError(body?.message || 'Erro ao criar administrador');
+        setCreatingAdminLoading(false);
+        return;
+      }
+      setShowNovoAdmin(false);
+      setNovoAdmin({ nome: '', matricula: '', senha: '' });
+      await fetchAdmins(localStorage.getItem('adminToken'));
+      alert('Administrador criado com sucesso');
+    } catch (err) {
+      console.error('salvarAdminReal error', err);
+      setCreatingAdminError('Erro de conexão ao criar administrador');
+    } finally {
+      setCreatingAdminLoading(false);
+    }
+  };
+
+  const fetchDashboard = async (token) => {
+    setLoadingDashboard(true);
+    try {
+      const res = await fetch('http://localhost:3000/api/admin/dashboard', { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Erro ao buscar métricas');
+      const data = await res.json();
+      setDashboard(data);
+    } catch (err) {
+      console.error('fetchDashboard error', err);
+      setError('Não foi possível carregar métricas do dashboard');
+    } finally {
+      setLoadingDashboard(false);
+    }
+  };
+
+  const fetchDashboardPublic = async () => {
+    setLoadingDashboard(true);
+    try {
+      const res = await fetch('http://localhost:3000/api/admin/dashboard-public');
+      if (!res.ok) throw new Error('Erro ao buscar métricas públicas');
+      const data = await res.json();
+      setDashboard(data);
+    } catch (err) {
+      console.error('fetchDashboardPublic error', err);
+      setError('Não foi possível carregar métricas do dashboard');
+    } finally {
+      setLoadingDashboard(false);
+    }
+  };
+
+  const fetchAdmins = async (token) => {
+    try {
+      if (!token) return;
+      const res = await fetch('http://localhost:3000/api/admin', { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return;
+      const body = await res.json();
+      setAdmins(body.value || body);
+    } catch (err) {
+      console.error('fetchAdmins error', err);
+    }
   };
 
   return (
@@ -181,8 +294,14 @@ function AdminDashboard() {
               <h6 className="text-muted text-uppercase small fw-bold mb-3">Resumo do Sistema</h6>
               <div className="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
                 <div>
-                  <h2 className="fw-bold mb-0">{usuarios.length}</h2>
+                  <h2 className="fw-bold mb-0">{loadingDashboard ? (
+                    <span className="spinner-border spinner-border-sm" />
+                  ) : (dashboard?.totalUsuarios ?? usuarios.length)}</h2>
                   <small className="text-muted">Usuários Ativos</small>
+                  <div className="mt-2 small text-muted">
+                    <div>Total Produtos: {loadingDashboard ? <em>—</em> : (dashboard?.totalProdutos ?? '—')}</div>
+                    <div>Total Matérias-primas: {loadingDashboard ? <em>—</em> : (dashboard?.totalMaterias ?? '—')}</div>
+                  </div>
                 </div>
                 <div className="bg-light p-3 rounded-circle text-primary">
                   <FaUsers size={24} color="#044CF4"/>
@@ -193,6 +312,7 @@ function AdminDashboard() {
             <div className="bg-white p-4 rounded-4 shadow-sm text-center">
               <h5 className="fw-bold mb-2">Novo Administrador</h5>
               <p className="text-muted small mb-4">Cadastre um aluno ou professor (Acesso Interno).</p>
+              <div className="small text-muted mb-3">Administradores cadastrados: {admins ? admins.length : 0}</div>
               <Button 
                 className="w-100 py-2 rounded-pill fw-bold" 
                 style={{ backgroundColor: "#044CF4", border: "none" }}
@@ -208,9 +328,14 @@ function AdminDashboard() {
         <Row className="g-4">
           <Col md={4}>
             <div className="bg-white p-4 rounded-4 shadow-sm h-100">
-               <h6 className="text-primary fw-bold mb-1">Servidor Backend</h6>
-               <h4 className="fw-bold text-success">{error ? "Offline" : "Online"}</h4>
-               <small className="text-muted">Porta: 3000</small>
+              <h6 className="text-primary fw-bold mb-1">Servidor Backend</h6>
+              <h4 className="fw-bold text-success">{error ? "Offline" : "Online"}</h4>
+              <small className="text-muted">Porta: 3000</small>
+              <hr />
+              <div className="small text-muted">
+                <div>Total Despesas: R$ {loadingDashboard ? <em>—</em> : (dashboard?.totalDespesas ?? '0.00')}</div>
+                <div>Total Custos Operacionais: R$ {loadingDashboard ? <em>—</em> : (dashboard?.totalCustosOperacionais ?? '0.00')}</div>
+              </div>
             </div>
           </Col>
         
@@ -260,6 +385,9 @@ function AdminDashboard() {
         </Modal.Header>
         <Modal.Body>
           <p className="text-muted small">Adicione um colaborador da universidade.</p>
+          {creatingAdminError && (
+            <Alert variant="danger">{creatingAdminError}</Alert>
+          )}
           <Form>
             <Form.Group className="mb-3">
               <Form.Label>Nome</Form.Label>
@@ -277,7 +405,9 @@ function AdminDashboard() {
         </Modal.Body>
         <Modal.Footer className="border-0">
           <Button variant="light" onClick={() => setShowNovoAdmin(false)}>Cancelar</Button>
-          <Button style={{ backgroundColor: "#044CF4", border: "none" }} onClick={salvarAdmin}>Salvar</Button>
+          <Button style={{ backgroundColor: "#044CF4", border: "none" }} onClick={salvarAdminReal} disabled={creatingAdminLoading}>
+            {creatingAdminLoading ? (<span className="spinner-border spinner-border-sm me-2" />) : null}Salvar
+          </Button>
         </Modal.Footer>
       </Modal>
 
