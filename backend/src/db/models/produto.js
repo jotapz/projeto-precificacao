@@ -38,12 +38,6 @@ const produtoSchema = new mongoose.Schema(
       enum: ['kg', 'g', 'L', 'ml', 'unidade']
     },
     ingredientes: [ingredienteSchema],
-
-    tempoProducaoHoras: {
-      type: Number,
-      required: true,
-      default: 0
-    },
   
     margemLucroPercentual: {
       type: Number,

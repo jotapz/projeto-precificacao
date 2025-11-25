@@ -37,16 +37,13 @@ class ProdutoController {
 
   static cadastrarProduto = async (req, res) => {
     try {
-      const {      
-        usuario, 
-        nome, 
-        unidade, 
-        ingredientes, 
-        tempoProducaoHoras, 
-        margemLucroPercentual 
-      } = req.body;
-      
-      if (!usuario || !nome || !unidade || !ingredientes) {
+      const {      
+        usuario, 
+        nome, 
+        unidade, 
+        ingredientes, 
+        margemLucroPercentual 
+      } = req.body;      if (!usuario || !nome || !unidade || !ingredientes) {
         return res.status(400).json({ message: "Campos obrigatórios faltando (usuário, nome, unidade, ingredientes)." });
       }
 
@@ -74,16 +71,13 @@ class ProdutoController {
         })
       );
 
-      const novoProduto = new Produto({
-        usuario,
-        nome,
-        unidade,
-        ingredientes: ingredientesProcessados,
-        tempoProducaoHoras: tempoProducaoHoras || 0,
-        margemLucroPercentual: margemLucroPercentual || 20 
-      });
-
-      const produtoSalvo = await novoProduto.save();
+      const novoProduto = new Produto({
+        usuario,
+        nome,
+        unidade,
+        ingredientes: ingredientesProcessados,
+        margemLucroPercentual: margemLucroPercentual || 20 
+      });      const produtoSalvo = await novoProduto.save();
       res.status(201).json({ message: "Produto cadastrado com sucesso!", item: produtoSalvo });
 
     } catch (erro) {
@@ -182,35 +176,24 @@ class ProdutoController {
         return res.status(404).json({ message: "Usuário do produto não encontrado." });
       }
 
-      // 2. Custo Variável (Soma dos Ingredientes)
-      const custoIngredientes = produto.ingredientes.reduce(
-        (total, ing) => total + ing.custoIngrediente, 
-        0
-      );
+      // 2. Custo Variável (Soma dos Ingredientes)
+      const custoIngredientes = produto.ingredientes.reduce(
+        (total, ing) => total + ing.custoIngrediente, 
+        0
+      );
 
-      // 3. Custos Fixos Mensais (CFM)
-      const despesas = await Despesa.find({ usuario: usuario._id });
-      const custosOp = await CustoOperacional.find({ usuario: usuario._id });
-      
-      const totalDespesas = despesas.reduce((total, item) => total + item.valorMensal, 0);
-      const totalCustosOp = custosOp.reduce((total, item) => total + item.valorMensal, 0);
-      const CFM = totalDespesas + totalCustosOp; // Custo Fixo Mensal Total
+      // 3. Custos Fixos Mensais (CFM)
+      const despesas = await Despesa.find({ usuario: usuario._id });
+      const custosOp = await CustoOperacional.find({ usuario: usuario._id });
+      
+      const totalDespesas = despesas.reduce((total, item) => total + item.valorMensal, 0);
+      const totalCustosOp = custosOp.reduce((total, item) => total + item.valorMensal, 0);
+      const CFM = totalDespesas + totalCustosOp; // Custo Fixo Mensal Total
 
-      // 4. Custo da Hora de Produção (CHP)
-            // Usa o valor definido no usuário, ou o padrão de 176 horas/mês se não estiver presente
-            let horasTrabalhadasMes = usuario.horasTrabalhadasMes;
-            if (!horasTrabalhadasMes || horasTrabalhadasMes === 0) {
-                horasTrabalhadasMes = 176; // padrão
-            }
-            const CHP = CFM / horasTrabalhadasMes;
+      // 4. Custo Total do Produto (CTP)
+      const CTP = custoIngredientes + CFM;
 
-      // 5. Custo Fixo do Produto (CFP)
-      const CFP = CHP * produto.tempoProducaoHoras;
-
-      // 6. Custo Total do Produto (CTP)
-      const CTP = custoIngredientes + CFP;
-
-      // 7. Preço de Venda Final (PVF)
+      // 5. Preço de Venda Final (PVF)
       const margem = produto.margemLucroPercentual / 100;
       if (margem >= 1) {
         return res.status(400).json({ message: "Margem de lucro deve ser menor que 100%." });
@@ -219,22 +202,17 @@ class ProdutoController {
       const PVF = CTP / (1 - margem);
 
 
-      res.status(200).json({
-        produtoNome: produto.nome,
-        custoIngredientes: parseFloat(custoIngredientes.toFixed(2)),
-        custoFixoProduto: parseFloat(CFP.toFixed(2)),
-        custoTotalProduto: parseFloat(CTP.toFixed(2)),
-        margemLucroPercentual: produto.margemLucroPercentual,
-        precoVendaSugerido: parseFloat(PVF.toFixed(2)),
-        detalhesCalculo: {
-          custoFixoMensalTotal: CFM,
-          horasTrabalhadasMes: horasTrabalhadasMes,
-          custoPorHora: parseFloat(CHP.toFixed(2)),
-          tempoProducaoHoras: produto.tempoProducaoHoras
-        }
-      });
-
-    } catch (erro) {
+      res.status(200).json({
+        produtoNome: produto.nome,
+        custoIngredientes: parseFloat(custoIngredientes.toFixed(2)),
+        custoFixoProduto: parseFloat(CFM.toFixed(2)),
+        custoTotalProduto: parseFloat(CTP.toFixed(2)),
+        margemLucroPercentual: produto.margemLucroPercentual,
+        precoVendaSugerido: parseFloat(PVF.toFixed(2)),
+        detalhesCalculo: {
+          custoFixoMensalTotal: CFM
+        }
+      });    } catch (erro) {
       console.error("Erro ao calcular preço:", erro);
       res.status(500).json({ message: `Erro ao calcular preço final: ${erro.message}` });
     }

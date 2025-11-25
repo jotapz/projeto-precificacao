@@ -10,6 +10,7 @@ import materiaPrimaRoutes from "./src/routes/materiaPrimaRoutes.js";
 import despesaRoutes from "./src/routes/despesaRoutes.js";
 import custoOperacionalRoutes from "./src/routes/custoOperacionalRoutes.js";
 import produtoRoutes from "./src/routes/produtoRoutes.js";
+import adminRoutes from "./src/routes/adminRoutes.js";
 
 
 try {
@@ -42,6 +43,7 @@ app.use("/api", materiaPrimaRoutes);
 app.use("/api", despesaRoutes);
 app.use("/api", custoOperacionalRoutes);
 app.use("/api", produtoRoutes);
+app.use("/api", adminRoutes);
 
 
 app.listen(port, () => {
