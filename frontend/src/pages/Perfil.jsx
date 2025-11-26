@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Button, Badge, Spinner } from "react-bootstrap";
+import { Row, Col, Button, Badge, Spinner, Modal, Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { FaUser, FaEnvelope, FaIdCard, FaMapMarkerAlt, FaPen, FaCalendarAlt, FaCamera } from "react-icons/fa";
@@ -10,15 +10,73 @@ function Perfil() {
   const navigate = useNavigate();
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editar, setEditar] = useState({
+    nome: '',
+    email: '',
+    bairro: '',
+    cpf: '',
+    tipoNegocio: ''
+  });
 
   useEffect(() => {
 
     const dadosStorage = localStorage.getItem("usuario");
     if (dadosStorage) {
-      setUsuario(JSON.parse(dadosStorage));
+      const userData = JSON.parse(dadosStorage);
+      setUsuario(userData);
+      setEditar({
+        nome: userData.nome || '',
+        email: userData.email || '',
+        bairro: userData.bairro || '',
+        cpf: userData.cpf || '',
+        tipoNegocio: userData.tipoNegocio || ''
+      });
     }
     setCarregando(false);
   }, []);
+
+  const handleEditarClick = () => {
+    // Sincronizar os dados do usuário com o formulário de edição antes de abrir
+    if (usuario) {
+      setEditar({
+        nome: usuario.nome || '',
+        email: usuario.email || '',
+        bairro: usuario.bairro || '',
+        cpf: usuario.cpf || '',
+        tipoNegocio: usuario.tipoNegocio || ''
+      });
+    }
+    setShowModal(true);
+  };
+
+  const handleFecharModal = () => {
+    setShowModal(false);
+  };
+
+  const handleSalvarEdicao = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      const res = await fetch(`http://localhost:3000/api/usuarios/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editar)
+      });
+
+      if (res.ok) {
+        const dadosAtualizados = { ...usuario, ...editar };
+        setUsuario(dadosAtualizados);
+        localStorage.setItem('usuario', JSON.stringify(dadosAtualizados));
+        alert('Perfil atualizado com sucesso!');
+        handleFecharModal();
+      } else {
+        alert('Erro ao atualizar perfil');
+      }
+    } catch (err) {
+      console.error('Erro:', err);
+      alert('Erro de conexão com o servidor');
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -105,7 +163,7 @@ function Perfil() {
             <div className="bg-white rounded-4 shadow-sm p-4 h-100">
               <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                 <h5 className="fw-bold text-primary mb-0" style={{ color: "#044CF4" }}>Dados Pessoais</h5>
-                <Button size="sm" style={{ backgroundColor: "#044CF4", border: "none" }} className="rounded-pill px-3">
+                <Button size="sm" style={{ backgroundColor: "#044CF4", border: "none" }} className="rounded-pill px-3" onClick={handleEditarClick}>
                   <FaPen size={12} className="me-2" /> Editar Perfil
                 </Button>
               </div>
@@ -152,31 +210,89 @@ function Perfil() {
                   </div>
                 </Col>
 
+                <Col md={12}>
+                  <label className="small text-muted text-uppercase fw-bold mb-1">Tipo de Negócio</label>
+                  <div className="p-3 bg-light rounded-3 d-flex align-items-center gap-3 border border-light">
+                     <div className="bg-white p-2 rounded-circle text-primary shadow-sm">
+                      <FaUser />
+                    </div>
+                    <span>{usuario?.tipoNegocio ? (usuario.tipoNegocio === 'pastelaria' ? 'Pastelaria' : usuario.tipoNegocio === 'pizzaria' ? 'Pizzaria' : usuario.tipoNegocio) : "Não informado"}</span>
+                  </div>
+                </Col>
+
               </Row>
 
-              <div className="mt-5">
-                <h6 className="fw-bold text-secondary mb-3">Estatísticas de Uso</h6>
-                <Row className="text-center">
-                  <Col>
-                    <div className="border rounded-3 p-3 bg-light">
-                      <h3 className="fw-bold text-primary mb-0">0</h3>
-                      <small className="text-muted">Produtos</small>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="border rounded-3 p-3 bg-light">
-                      <h3 className="fw-bold text-success mb-0">0</h3>
-                      <small className="text-muted">Vendas</small>
-                    </div>
-                  </Col>
-                  <Col>
-                    <div className="border rounded-3 p-3 bg-light">
-                      <h3 className="fw-bold text-warning mb-0">Free</h3>
-                      <small className="text-muted">Plano</small>
-                    </div>
-                  </Col>
-                </Row>
-              </div>
+              {/* Modal de Edição */}
+              <Modal show={showModal} onHide={handleFecharModal} centered>
+                <Modal.Header closeButton>
+                  <Modal.Title>Editar Perfil</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <Form>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Nome Completo</Form.Label>
+                      <Form.Control 
+                        type="text" 
+                        value={editar.nome} 
+                        onChange={(e) => setEditar({...editar, nome: e.target.value})}
+                        placeholder="Digite seu nome"
+                      />
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                      <Form.Label>Email</Form.Label>
+                      <Form.Control 
+                        type="email" 
+                        value={editar.email} 
+                        disabled
+                        placeholder="Digite seu email"
+                      />
+                      <small className="text-muted">Não é possível alterar o email</small>
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                      <Form.Label>Bairro / Endereço</Form.Label>
+                      <Form.Control 
+                        type="text" 
+                        value={editar.bairro} 
+                        onChange={(e) => setEditar({...editar, bairro: e.target.value})}
+                        placeholder="Digite seu bairro"
+                      />
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                      <Form.Label>CPF / CNPJ</Form.Label>
+                      <Form.Control 
+                        type="text" 
+                        value={editar.cpf} 
+                        disabled
+                        placeholder="Digite seu CPF/CNPJ"
+                      />
+                      <small className="text-muted">Não é possível alterar o CPF/CNPJ</small>
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+                      <Form.Label>Tipo de Negócio</Form.Label>
+                      <Form.Select 
+                        value={editar.tipoNegocio} 
+                        onChange={(e) => setEditar({...editar, tipoNegocio: e.target.value})}
+                      >
+                        <option value="">Selecione o tipo de negócio</option>
+                        <option value="pastelaria">Pastelaria</option>
+                        <option value="pizzaria">Pizzaria</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button variant="secondary" onClick={handleFecharModal}>
+                    Cancelar
+                  </Button>
+                  <Button style={{ backgroundColor: "#044CF4", border: "none" }} onClick={handleSalvarEdicao}>
+                    Salvar Alterações
+                  </Button>
+                </Modal.Footer>
+              </Modal>
 
             </div>
           </Col>

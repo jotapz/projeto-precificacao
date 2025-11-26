@@ -10,6 +10,10 @@ function PrecificacaoPage() {
   const API_URL = "http://localhost:3000/api";
   const userId = localStorage.getItem("userId");
   const [produtos, setProdutos] = useState([]);
+  const [loadingProdutos, setLoadingProdutos] = useState(true);
+  const [custos, setCustos] = useState([]);
+  const [despesas, setDespesas] = useState([]);
+  const [loadingCustos, setLoadingCustos] = useState(true);
   const [calculo, setCalculo] = useState(null);
   const [loadingCalculo, setLoadingCalculo] = useState(false);
   const [calculoError, setCalculoError] = useState(null);
@@ -25,10 +29,43 @@ function PrecificacaoPage() {
       } catch (err) {
         console.error("Erro ao carregar produtos:", err);
       }
+      finally {
+        setLoadingProdutos(false);
+      }
     };
 
     fetchProdutos();
   }, [userId]);
+
+  useEffect(() => {
+    const fetchCustosDespesas = async () => {
+      try {
+        if (!userId) return;
+        setLoadingCustos(true);
+        const [custosRes, despesasRes] = await Promise.all([
+          fetch(`${API_URL}/custos/user/${userId}`),
+          fetch(`${API_URL}/despesas/user/${userId}`)
+        ]);
+
+        const custosData = custosRes.ok ? await custosRes.json() : [];
+        const despesasData = despesasRes.ok ? await despesasRes.json() : [];
+
+        setCustos(custosData || []);
+        setDespesas(despesasData || []);
+      } catch (err) {
+        console.error('Erro ao carregar custos/despesas:', err);
+      } finally {
+        setLoadingCustos(false);
+      }
+    };
+
+    fetchCustosDespesas();
+  }, [userId]);
+
+  const totalCustosOperacionais = (
+    (custos || []).reduce((s, c) => s + (Number(c.valorMensal) || 0), 0) +
+    (despesas || []).reduce((s, d) => s + (Number(d.valorMensal) || 0), 0)
+  );
 
   useEffect(() => {
     const fetchCalculo = async () => {
@@ -197,7 +234,11 @@ function PrecificacaoPage() {
                 className="fw-bold"
                 style={{ fontSize: "1.25rem", color: "#007bff", margin: 0 }}
               >
-                R$ 90.00
+                {loadingCustos ? (
+                  'Carregando...'
+                ) : (
+                  `R$ ${Number(totalCustosOperacionais || 0).toFixed(2)}`
+                )}
               </p>
               <small style={{ color: "#999" }}>custos cadastrados</small>
             </div>
@@ -308,7 +349,7 @@ function PrecificacaoPage() {
               className="fw-bold"
               style={{ color: "#007bff", margin: "10px 0" }}
             >
-              R$ 90.00
+              {loadingCustos ? 'Carregando...' : `R$ ${Number(totalCustosOperacionais || 0).toFixed(2)}`}
             </h3>
             <small style={{ color: "#999" }}>por mês</small>
           </div>
@@ -329,7 +370,7 @@ function PrecificacaoPage() {
               className="fw-bold"
               style={{ color: "#28a745", margin: "10px 0" }}
             >
-              1
+              {loadingProdutos ? 'Carregando...' : (produtos ? produtos.length : 0)}
             </h3>
             <small style={{ color: "#999" }}>registros criados</small>
           </div>

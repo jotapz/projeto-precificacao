@@ -9,6 +9,7 @@ function Registrar() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [bairro, setBairro] = useState("");
+  const [tipoNegocio, setTipoNegocio] = useState("");
   const [senha, setSenha] = useState("");
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [cpf, setCpf] = useState("");
@@ -26,7 +27,7 @@ function Registrar() {
       const res = await fetch("http://localhost:3000/api/usuarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, email, senha, confirmarSenha, bairro, cpf }),
+        body: JSON.stringify({ nome, email, senha, confirmarSenha, bairro, cpf, tipoNegocio }),
       });
 
       const data = await res.json();
@@ -79,6 +80,14 @@ function Registrar() {
             <div className="mb-4 d-flex flex-column align-items-center">
               <div style={{ width: "90%" }} className="text-start mb-1"><small className="text-muted ms-3">* Opcional</small></div>
               <input value={cpf} onChange={(e) => setCpf(e.target.value)} type="text" className="form-control rounded-pill p-3 bg-light border-0 shadow-sm" style={{ width: "90%" }} placeholder="Digite seu CPF" />
+            </div>
+            <div className="mb-4 d-flex flex-column align-items-center">
+              <div style={{ width: "90%" }} className="text-start mb-1"><small className="text-muted ms-3">Tipo de negócio (opcional)</small></div>
+              <select value={tipoNegocio} onChange={(e) => setTipoNegocio(e.target.value)} className="form-select rounded-pill p-3 bg-light border-0 shadow-sm" style={{ width: "90%" }}>
+                <option value="">Selecione o tipo de negócio</option>
+                <option value="pastelaria">Pastelaria</option>
+                <option value="pizzaria">Pizzaria</option>
+              </select>
             </div>
             <button type="submit" className="btn btn-primary rounded-pill py-3 fw-bold btn-hover-lift mx-auto d-block" style={{ width: "80%", maxWidth: "150px", backgroundColor: "#004AF7" }}>Registrar</button>
           </form>
