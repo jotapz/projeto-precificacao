@@ -143,7 +143,6 @@ function LoginAdmin() {
               </button>
             </div>
 
-            {/* bypass button for initial setup */}
             {!hasAdmins && (
               <div className="mt-3">
                 <button type="button" className="btn btn-outline-secondary rounded-pill" onClick={handleBypass}>

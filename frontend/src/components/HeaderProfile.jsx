@@ -4,6 +4,8 @@ import ProfileMenu from "./ProfileMenu";
 
 import { FaChevronDown } from "react-icons/fa"; 
 
+export const PROFILE_IMAGE = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
 function HeaderProfile() {
   const [showMenu, setShowMenu] = useState(false);
   const profileRef = useRef(null);

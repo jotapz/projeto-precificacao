@@ -1,4 +1,8 @@
 import { useState, useEffect } from "react";
+// 1. IMPORTAR AS BIBLIOTECAS DE PDF E ÍCONE
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { FaFilePdf } from "react-icons/fa"; // Certifique-se de ter react-icons instalado
 
 function PrecificacaoPage() {
   const [selectedProduct, setSelectedProduct] = useState("");
@@ -55,6 +59,74 @@ function PrecificacaoPage() {
 
     fetchCalculo();
   }, [selectedProduct]);
+
+  // --- 2. FUNÇÃO PARA GERAR O PDF ---
+  const gerarPDF = () => {
+    if (!calculo) return;
+
+    const doc = new jsPDF();
+
+    // Cabeçalho
+    doc.setTextColor(4, 76, 244); // Azul do sistema
+    doc.setFontSize(18);
+    doc.text("Relatório de Precificação", 14, 20);
+
+    // Linha divisória
+    doc.setDrawColor(200);
+    doc.line(14, 25, 196, 25);
+
+    // Informações Básicas
+    doc.setTextColor(0);
+    doc.setFontSize(12);
+    doc.text(`Produto: ${calculo.produtoNome}`, 14, 35);
+    doc.text(`Data do cálculo: ${new Date().toLocaleDateString()}`, 14, 42);
+
+    // Tabela Principal
+    autoTable(doc, {
+      startY: 50,
+      head: [['Descrição', 'Valor']],
+      body: [
+        ['Custo de Ingredientes', `R$ ${Number(calculo.custoIngredientes).toFixed(2)}`],
+        ['Custo Fixo (por produto)', `R$ ${Number(calculo.custoFixoProduto).toFixed(2)}`],
+        ['Custo Total Unitário', `R$ ${Number(calculo.custoTotalProduto).toFixed(2)}`],
+        ['Margem de Lucro', `${calculo.margemLucroPercentual}%`],
+        ['PREÇO DE VENDA SUGERIDO', `R$ ${Number(calculo.precoVendaSugerido).toFixed(2)}`]
+      ],
+      theme: 'grid',
+      headStyles: { fillColor: [4, 76, 244] },
+      // Deixar a última linha (Preço) em negrito e azul
+      didParseCell: (data) => {
+        if (data.row.index === 4) {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.textColor = [4, 76, 244];
+        }
+      }
+    });
+
+    // Detalhes Operacionais (Tabela secundária)
+    if (calculo.detalhesCalculo) {
+      doc.text("Detalhes Operacionais:", 14, doc.lastAutoTable.finalY + 15);
+      
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 20,
+        head: [['Parâmetro', 'Valor']],
+        body: [
+          ['Custo Fixo Mensal Total', `R$ ${Number(calculo.detalhesCalculo.custoFixoMensalTotal).toFixed(2)}`],
+          ['Horas Trabalhadas/Mês', `${calculo.detalhesCalculo.horasTrabalhadasMes}h`],
+          ['Custo da Hora', `R$ ${Number(calculo.detalhesCalculo.custoPorHora).toFixed(2)}`],
+          ['Tempo de Produção', `${calculo.detalhesCalculo.tempoProducaoHoras}h`]
+        ],
+        theme: 'striped'
+      });
+    }
+
+    // Rodapé
+    doc.setFontSize(10);
+    doc.setTextColor(150);
+    doc.text("Gerado pelo Sistema NAF", 105, 290, null, null, "center");
+
+    doc.save(`Precificacao_${calculo.produtoNome}.pdf`);
+  };
 
   return (
     <div
@@ -142,7 +214,21 @@ function PrecificacaoPage() {
               minHeight: "380px",
             }}
           >
-            <h5 className="fw-semibold mb-4">Resultado do Cálculo</h5>
+            {/* 3. CABEÇALHO DO CARD COM BOTÃO DE EXPORTAR */}
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h5 className="fw-semibold mb-0">Resultado do Cálculo</h5>
+              {calculo && (
+                <button 
+                  onClick={gerarPDF}
+                  className="btn btn-sm text-white d-flex align-items-center gap-2 rounded-pill px-3"
+                  style={{ backgroundColor: "#28a745", border: "none" }} // Verde estilo Excel/Export
+                  title="Baixar PDF"
+                >
+                  <FaFilePdf /> Exportar
+                </button>
+              )}
+            </div>
+
             {!selectedProduct ? (
               <p style={{ color: "#999", fontSize: "0.95rem" }}>
                 Selecione um produto para ver o cálculo
@@ -205,7 +291,7 @@ function PrecificacaoPage() {
         </div>
       </div>
 
-      {/* ----------------------- CARDS DE RESUMO ------------------------ */}
+     
       <div className="row g-4 mt-4 mb-5">
         <div className="col-md-6">
           <div
