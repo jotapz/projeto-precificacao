@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-// 1. IMPORTAR AS BIBLIOTECAS DE PDF E ÍCONE
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { FaFilePdf } from "react-icons/fa"; // Certifique-se de ter react-icons instalado
+import { FaFilePdf, FaRedo } from "react-icons/fa";
 
 function PrecificacaoPage() {
   const [selectedProduct, setSelectedProduct] = useState("");
@@ -97,28 +96,30 @@ function PrecificacaoPage() {
     fetchCalculo();
   }, [selectedProduct]);
 
-  // --- 2. FUNÇÃO PARA GERAR O PDF ---
+  const handleLimpar = () => {
+    setSelectedProduct("");
+    setSalesVolume("100");
+    setCalculo(null);
+    setCalculoError(null);
+  };
+
   const gerarPDF = () => {
     if (!calculo) return;
 
     const doc = new jsPDF();
 
-    // Cabeçalho
-    doc.setTextColor(4, 76, 244); // Azul do sistema
+    doc.setTextColor(4, 76, 244); 
     doc.setFontSize(18);
     doc.text("Relatório de Precificação", 14, 20);
 
-    // Linha divisória
     doc.setDrawColor(200);
     doc.line(14, 25, 196, 25);
 
-    // Informações Básicas
     doc.setTextColor(0);
     doc.setFontSize(12);
     doc.text(`Produto: ${calculo.produtoNome}`, 14, 35);
     doc.text(`Data do cálculo: ${new Date().toLocaleDateString()}`, 14, 42);
 
-    // Tabela Principal
     autoTable(doc, {
       startY: 50,
       head: [['Descrição', 'Valor']],
@@ -131,7 +132,6 @@ function PrecificacaoPage() {
       ],
       theme: 'grid',
       headStyles: { fillColor: [4, 76, 244] },
-      // Deixar a última linha (Preço) em negrito e azul
       didParseCell: (data) => {
         if (data.row.index === 4) {
           data.cell.styles.fontStyle = 'bold';
@@ -140,7 +140,6 @@ function PrecificacaoPage() {
       }
     });
 
-    // Detalhes Operacionais (Tabela secundária)
     if (calculo.detalhesCalculo) {
       doc.text("Detalhes Operacionais:", 14, doc.lastAutoTable.finalY + 15);
       
@@ -157,7 +156,6 @@ function PrecificacaoPage() {
       });
     }
 
-    // Rodapé
     doc.setFontSize(10);
     doc.setTextColor(150);
     doc.text("Gerado pelo Sistema NAF", 105, 290, null, null, "center");
@@ -189,9 +187,20 @@ function PrecificacaoPage() {
               minHeight: "380px",
             }}
           >
-            <h5 className="fw-semibold mb-4">Parâmetros de Cálculo</h5>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h5 className="fw-semibold mb-0">Parâmetros de Cálculo</h5>
+              
+              {selectedProduct && (
+                <button 
+                  onClick={handleLimpar}
+                  className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2 rounded-pill px-3"
+                  title="Limpar campos"
+                >
+                  <FaRedo size={12} /> Limpar
+                </button>
+              )}
+            </div>
 
-            {/* Select Produto */}
             <div className="mb-4">
               <label className="form-label fw-medium">Produto</label>
               <select
@@ -209,7 +218,6 @@ function PrecificacaoPage() {
               </select>
             </div>
 
-            {/* Vendas mensais */}
             <div className="mb-4">
               <label className="form-label fw-medium">
                 Vendas Mensais Esperadas (Unidades)
@@ -225,7 +233,6 @@ function PrecificacaoPage() {
 
             <hr />
 
-            {/* Custos Operacionais Mensais */}
             <div>
               <h6 className="fw-semibold mb-1">
                 Custos Operacionais Mensais
@@ -245,7 +252,6 @@ function PrecificacaoPage() {
           </div>
         </div>
 
-        {/* ----------------------- COLUNA DIREITA ------------------------ */}
         <div className="col-md-6">
           <div
             className="card shadow-sm p-3"
@@ -255,14 +261,14 @@ function PrecificacaoPage() {
               minHeight: "380px",
             }}
           >
-            {/* 3. CABEÇALHO DO CARD COM BOTÃO DE EXPORTAR */}
+           
             <div className="d-flex justify-content-between align-items-center mb-4">
               <h5 className="fw-semibold mb-0">Resultado do Cálculo</h5>
               {calculo && (
                 <button 
                   onClick={gerarPDF}
                   className="btn btn-sm text-white d-flex align-items-center gap-2 rounded-pill px-3"
-                  style={{ backgroundColor: "#28a745", border: "none" }} // Verde estilo Excel/Export
+                  style={{ backgroundColor: "#28a745", border: "none" }} 
                   title="Baixar PDF"
                 >
                   <FaFilePdf /> Exportar
@@ -271,11 +277,15 @@ function PrecificacaoPage() {
             </div>
 
             {!selectedProduct ? (
-              <p style={{ color: "#999", fontSize: "0.95rem" }}>
-                Selecione um produto para ver o cálculo
-              </p>
+              <div style={{ minHeight: "250px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <p style={{ color: "#ccc" }}>Selecione um produto ao lado para ver o cálculo</p>
+              </div>
             ) : loadingCalculo ? (
-              <p style={{ color: "#999", fontSize: "0.95rem" }}>Carregando resultado...</p>
+              <div style={{ minHeight: "250px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Carregando...</span>
+                </div>
+              </div>
             ) : calculoError ? (
               <div style={{ color: "#c00" }}>Erro: {calculoError}</div>
             ) : calculo ? (
@@ -323,11 +333,7 @@ function PrecificacaoPage() {
                   </div>
                 </div>
               </div>
-            ) : (
-              <div style={{ minHeight: "150px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <p style={{ color: "#ccc" }}>Nenhum produto selecionado</p>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

@@ -1,16 +1,15 @@
 import "bootstrap/dist/css/bootstrap.min.css";
 import React, { useState, useRef, useEffect } from "react";
+import { FaChevronDown, FaUser } from "react-icons/fa"; 
 import ProfileMenu from "./ProfileMenu";
-
-import { FaChevronDown } from "react-icons/fa"; 
-
-export const PROFILE_IMAGE = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 function HeaderProfile() {
   const [showMenu, setShowMenu] = useState(false);
   const profileRef = useRef(null);
+  
+  // Inicia com null para renderizar ícone padrão se falhar
+  const [iniciais, setIniciais] = useState(null); 
 
-  // Fecha o menu ao clicar fora
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
@@ -21,85 +20,103 @@ function HeaderProfile() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // --- LÓGICA DE INICIAIS ---
+  useEffect(() => {
+    try {
+      const usuarioStorage = localStorage.getItem("usuario");
+      const adminStorage = localStorage.getItem("adminInfo"); // Caso seja admin
+      
+      console.log("--- DEBUG HEADER ---");
+      console.log("Storage Usuário:", usuarioStorage);
+      
+      let nome = "";
+
+      if (usuarioStorage) {
+        const dados = JSON.parse(usuarioStorage);
+        nome = dados.nome || dados.name || ""; // Tenta 'nome' ou 'name'
+      } else if (adminStorage) {
+        const dados = JSON.parse(adminStorage);
+        nome = dados.nome || "Admin";
+      }
+
+      if (nome && nome.trim().length > 0) {
+        const partes = nome.trim().split(" ");
+        // Pega 1ª letra do primeiro nome
+        let letras = partes[0].charAt(0).toUpperCase();
+        
+        // Se tiver sobrenome, pega a 1ª dele também
+        if (partes.length > 1) {
+          letras += partes[1].charAt(0).toUpperCase();
+        }
+        setIniciais(letras);
+      } else {
+        setIniciais(null); // Sem nome -> vai mostrar ícone
+      }
+
+    } catch (error) {
+      console.error("Erro Header:", error);
+      setIniciais(null);
+    }
+  }, []);
+
   return (
     <header className="bg-white py-3 shadow-sm" style={{ borderBottom: "1px solid #f0f0f0" }}>
       <nav className="navbar navbar-expand-lg navbar-light">
-        
-        {/* Adicionei 'position-relative' para garantir a centralização absoluta do título se precisar */}
         <div className="container-fluid px-5 position-relative">
           
-          {/* LOGO */}
-          <a
-            href="#"
-            className="navbar-brand d-flex align-items-center gap-3 fw-bold fs-3 text-decoration-none"
-            style={{ color: "#044CF4" }}
-          >
+          <a href="#" className="navbar-brand d-flex align-items-center gap-3 fw-bold fs-3 text-decoration-none" style={{ color: "#044CF4" }}>
             <img
               src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTM12yH_4BpgheFunQXK6xLspQb7USkO-kkNQ&s"
               alt="Logo"
-              width="50" // Diminuí levemente para ficar mais harmônico
+              width="50"
               height="50"
             />
             NAF
           </a>
 
-          {/* TÍTULO CENTRALIZADO */}
-          {/* Usei mx-auto para centralizar e diminuí um pouco a fonte para fs-3 para ficar mais elegante */}
           <h1 className="fw-normal fs-3 text-secondary mx-auto d-none d-lg-block m-0">
             Sistema Precificação
           </h1>
 
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarNav"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-
-          {/* ÁREA DO PERFIL */}
-          <div
-            className="collapse navbar-collapse justify-content-end flex-grow-0"
-            id="navbarNav"
-            ref={profileRef}
-          >
+          <div className="collapse navbar-collapse justify-content-end flex-grow-0" id="navbarNav" ref={profileRef}>
             <ul className="navbar-nav align-items-center">
               <li className="nav-item position-relative">
                 
-                {/* BOTÃO DE PERFIL REFEITO */}
+                {/* BOTÃO DO PERFIL */}
                 <div 
                   className="d-flex align-items-center gap-2 p-1 pe-3 rounded-pill"
                   style={{ 
                     cursor: "pointer", 
                     transition: "background 0.2s",
-                    border: showMenu ? "1px solid #dee2e6" : "1px solid transparent" // Efeito sutil ao clicar
+                    border: showMenu ? "1px solid #dee2e6" : "1px solid transparent"
                   }}
                   onClick={() => setShowMenu(!showMenu)}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f8f9fa"}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
                 >
                   
-                  {/* Avatar com Iniciais (Estilo Google/Moderno) */}
+                  {/* BOLA DO AVATAR */}
                   <div 
-                    className="d-flex justify-content-center align-items-center rounded-circle text-secondary fw-bold border"
+                    className="d-flex justify-content-center align-items-center rounded-circle border shadow-sm"
                     style={{ 
                       width: "45px", 
                       height: "45px", 
-                      backgroundColor: "#f8f9fa", // Cinza bem clarinho
+                      // Fundo Azul forte para garantir contraste
+                      backgroundColor: "#044CF4", 
+                      color: "#FFFFFF",
                       fontSize: "1.1rem",
+                      fontWeight: "bold",
                       letterSpacing: "-1px"
                     }}
                   >
-                    NC {/* Iniciais de "Nome Cadastrado" ou pegue do localStorage */}
+                    {/* Se tiver iniciais, mostra elas. Se não, mostra ícone de user */}
+                    {iniciais ? iniciais : <FaUser size={18} />}
                   </div>
 
-                  {/* Seta indicativa */}
                   <FaChevronDown size={12} className="text-secondary opacity-50" />
                 
                 </div>
 
-                {/* MENU SUSPENSO */}
                 {showMenu && (
                   <div style={{ position: "absolute", right: 0, top: "110%", zIndex: 1000 }}>
                     <ProfileMenu />
