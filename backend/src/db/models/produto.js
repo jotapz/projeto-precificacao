@@ -44,6 +44,20 @@ const produtoSchema = new mongoose.Schema(
       required: true,
       default: 20
     }
+    ,
+    // tempo de produção em horas por unidade (usado no cálculo original de custo)
+    tempoProducaoHoras: {
+      type: Number,
+      required: false,
+      default: 0
+    }
+    ,
+    // vendas mensais esperadas (unidades) — usada para alocar custos fixos por unidade
+    vendasMensaisEsperadas: {
+      type: Number,
+      required: false,
+      default: 0
+    }
   
   },
   { 
