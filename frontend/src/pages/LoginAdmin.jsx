@@ -16,7 +16,6 @@ function LoginAdmin() {
   const [hasAdmins, setHasAdmins] = useState(true);
 
   useEffect(() => {
-    // check if any admins exist -> allow bypass when none
     async function checkAdmins() {
       try {
         const res = await fetch('http://localhost:3000/api/admin/exists');
@@ -65,18 +64,16 @@ function LoginAdmin() {
   }
 
   function handleBypass() {
-    // temporary bypass for first setup (only visible when no admins)
     localStorage.setItem('userType', 'admin');
     localStorage.setItem('adminBypass', '1');
     navigate('/admin-dashboard');
   }
 
   return (
-
     <div className="d-flex flex-column vh-100 overflow-hidden">
       
-
       <Header />
+      
       <div 
         className="d-flex justify-content-center align-items-center flex-grow-1" 
         style={{ backgroundColor: "#004AF7" }}
@@ -130,9 +127,21 @@ function LoginAdmin() {
               <div className="alert alert-danger w-75 mx-auto" role="alert">{error}</div>
             )}
 
-            <button type="submit" className="btn btn-primary rounded-pill mt-3 btn-hover-lift d-flex align-items-center justify-content-center" style={{ width: "80%", maxWidth: "140px", backgroundColor: "#004AF7" }} disabled={loading}>
-              {loading ? (<><span className="spinner-border spinner-border-sm me-2" />Acessando...</>) : 'Acessar'}
-            </button>
+            <div className="d-flex justify-content-center mt-3">
+              <button 
+                type="submit" 
+                className="btn btn-primary rounded-pill btn-hover-lift d-flex align-items-center justify-content-center" 
+                style={{ width: "140px", backgroundColor: "#004AF7", border: "none" }} 
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Acessando...
+                  </>
+                ) : 'Acessar'}
+              </button>
+            </div>
 
             {/* bypass button for initial setup */}
             {!hasAdmins && (

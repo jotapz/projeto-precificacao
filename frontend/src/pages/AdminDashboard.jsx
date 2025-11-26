@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Modal, Button, Form, Table, Badge, Row, Col, Spinner, Alert } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { FaUserTie, FaUsers, FaTrash, FaEye, FaPlus } from "react-icons/fa";
+import { FaUserTie, FaUsers, FaTrash, FaEye, FaPlus, FaSignOutAlt } from "react-icons/fa";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -15,15 +15,24 @@ function AdminDashboard() {
   const [creatingAdminLoading, setCreatingAdminLoading] = useState(false);
   const [creatingAdminError, setCreatingAdminError] = useState(null);
 
-  
   const [showDetalhes, setShowDetalhes] = useState(false);
   const [usuarioSelecionado, setUsuarioSelecionado] = useState(null);
-  
-  
   const [showNovoAdmin, setShowNovoAdmin] = useState(false);
   const [novoAdmin, setNovoAdmin] = useState({ nome: "", matricula: "", senha: "" });
 
- 
+  const [showMenu, setShowMenu] = useState(false);
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const fetchUsuarios = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/usuarios");
@@ -42,12 +51,10 @@ function AdminDashboard() {
     }
   };
 
- 
   useEffect(() => {
     const token = localStorage.getItem('adminToken');
     const bypass = localStorage.getItem('adminBypass');
 
-    // If there is a token -> load protected dashboard + admin list
     if (token) {
       fetchUsuarios();
       fetchDashboard(token);
@@ -55,47 +62,38 @@ function AdminDashboard() {
       return;
     }
 
-    // If bypass is active, use public dashboard so admin can enter without login
     if (bypass) {
       fetchUsuarios();
       fetchDashboardPublic();
-      // admin list will not be available without token
       return;
     }
 
-    // If no token and no bypass, check if any admins exist. If none, allow public dashboard
     (async () => {
       try {
         const r = await fetch('http://localhost:3000/api/admin/exists');
         if (!r.ok) throw new Error('could not check admins');
         const b = await r.json();
         if (!b.hasAdmins) {
-          // no admins yet: allow public access to dashboard
           fetchUsuarios();
           fetchDashboardPublic();
         } else {
-          // admins exist and there is no token: redirect to login
           navigate('/login-admin');
         }
       } catch (error) {
         console.error('admin existence check error', error);
-        // fallback: try loading users
         fetchUsuarios();
       }
     })();
   }, [navigate]);
 
-
   const excluirUsuario = async (id) => {
     if (window.confirm("Tem certeza que deseja excluir este usuário permanentemente?")) {
       try {
-        
         const response = await fetch(`http://localhost:3000/api/usuarios/${id}`, {
           method: 'DELETE',
         });
 
         if (response.ok) {
-        
           setUsuarios(usuarios.filter(u => u._id !== id)); 
           setShowDetalhes(false);
           alert("Usuário excluído com sucesso!");
@@ -109,7 +107,6 @@ function AdminDashboard() {
     }
   };
 
- 
   const handleLogout = () => {
     localStorage.clear();
     navigate("/login-admin");
@@ -120,9 +117,6 @@ function AdminDashboard() {
     setShowDetalhes(true);
   };
 
-  // NOTE: real creation is handled by salvarAdminReal
-
-  // new implementation: POST to backend and refresh admin list
   const salvarAdminReal = async () => {
     setCreatingAdminError(null);
     if (!novoAdmin.nome || !novoAdmin.matricula || !novoAdmin.senha) {
@@ -200,26 +194,60 @@ function AdminDashboard() {
   return (
     <div className="min-vh-100 bg-light">
       
-    
       <div className="bg-white py-3 px-4 d-flex justify-content-between align-items-center shadow-sm" style={{ height: "80px" }}>
         <div className="d-flex align-items-center gap-2">
            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTM12yH_4BpgheFunQXK6xLspQb7USkO-kkNQ&s" alt="Logo" width="50" />
            <h4 className="mb-0 fw-bold text-primary" style={{ color: "#044CF4" }}>NAF</h4>
         </div>
         <h4 className="mb-0 fw-normal text-secondary d-none d-md-block">Painel Administrativo</h4>
-        <div className="d-flex align-items-center gap-3">
+        
+        <div 
+          className="d-flex align-items-center gap-3 position-relative" 
+          ref={profileRef}
+        >
           <div className="text-end lh-1">
             <div className="fw-bold">Admin</div>
             <small className="text-muted">Logado</small>
           </div>
-          <div className="rounded-circle bg-light d-flex justify-content-center align-items-center fw-bold text-secondary" 
-               style={{ width: "45px", height: "45px", cursor: "pointer" }} onClick={handleLogout}>
+          
+          <div 
+            className="rounded-circle bg-light d-flex justify-content-center align-items-center fw-bold text-secondary border" 
+            style={{ width: "45px", height: "45px", cursor: "pointer" }} 
+            onClick={() => setShowMenu(!showMenu)}
+          >
             JP
           </div>
+
+          {showMenu && (
+            <div 
+              className="card position-absolute shadow-lg border-0 rounded-4 overflow-hidden"
+              style={{ 
+                top: "60px", 
+                right: "0", 
+                width: "240px", 
+                zIndex: 1050,
+                animation: "fadeIn 0.2s ease-out" 
+              }}
+            >
+               <div className="px-4 py-3 bg-light border-bottom">
+                 <p className="mb-0 small text-muted">Logado como</p>
+                 <p className="mb-0 fw-bold text-dark">Administrador</p>
+               </div>
+
+               <div className="list-group list-group-flush py-2">
+                 <button
+                   className="list-group-item list-group-item-action border-0 px-4 py-2 d-flex align-items-center gap-3 text-danger bg-transparent w-100 text-start"
+                   onClick={handleLogout}
+                 >
+                   <FaSignOutAlt size={14} />
+                   <span className="fw-bold">Sair</span>
+                 </button>
+               </div>
+            </div>
+          )}
         </div>
       </div>
 
-     
       <div className="w-100 d-flex align-items-center px-4" style={{ backgroundColor: "#044CF4", height: "60px" }}>
         <div className="text-white fw-bold border-bottom border-3 border-white pb-1" style={{ cursor: "pointer" }}>
           Visão Geral
@@ -228,7 +256,6 @@ function AdminDashboard() {
           Cadastrar Administradores
         </div>
       </div>
-
 
       <div className="container-fluid py-4" style={{ maxWidth: "1200px" }}>
         
@@ -265,11 +292,9 @@ function AdminDashboard() {
                       <tr><td colSpan="4" className="text-center text-muted">Nenhum usuário encontrado no banco de dados.</td></tr>
                     ) : (
                       usuarios.map((user) => (
-                     
                         <tr key={user._id}>
                           <td className="fw-bold text-dark">{user.nome}</td>
                           <td className="text-muted small">{user.email}</td>
-                         
                           <td><Badge bg="light" text="dark" className="border">{user.bairro || "N/A"}</Badge></td>
                           <td className="text-end">
                             <Button variant="link" className="p-0 me-3" onClick={() => abrirDetalhes(user)}>
@@ -288,7 +313,6 @@ function AdminDashboard() {
             </div>
           </Col>
 
-        
           <Col lg={4}>
             <div className="bg-white p-4 rounded-4 shadow-sm mb-4">
               <h6 className="text-muted text-uppercase small fw-bold mb-3">Resumo do Sistema</h6>
@@ -324,7 +348,6 @@ function AdminDashboard() {
           </Col>
         </Row>
 
-       
         <Row className="g-4">
           <Col md={4}>
             <div className="bg-white p-4 rounded-4 shadow-sm h-100">
@@ -338,12 +361,10 @@ function AdminDashboard() {
               </div>
             </div>
           </Col>
-        
         </Row>
 
       </div>
 
-      
       <Modal show={showDetalhes} onHide={() => setShowDetalhes(false)} centered>
         <Modal.Header closeButton className="border-0 pb-0">
           <Modal.Title className="fw-bold">Detalhes do Usuário</Modal.Title>
@@ -378,7 +399,6 @@ function AdminDashboard() {
         </Modal.Footer>
       </Modal>
 
-     
       <Modal show={showNovoAdmin} onHide={() => setShowNovoAdmin(false)} centered>
         <Modal.Header closeButton className="border-0">
           <Modal.Title className="fw-bold">Novo Administrador</Modal.Title>
