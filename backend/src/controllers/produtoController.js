@@ -35,15 +35,19 @@ class ProdutoController {
     }
 
 
-  static cadastrarProduto = async (req, res) => {
-    try {
-      const {      
-        usuario, 
-        nome, 
-        unidade, 
-        ingredientes, 
-        margemLucroPercentual 
-      } = req.body;      if (!usuario || !nome || !unidade || !ingredientes) {
+  static cadastrarProduto = async (req, res) => {
+    try {
+      const {
+        usuario,
+        nome,
+        unidade,
+        ingredientes,
+        tempoProducaoHoras,
+        vendasMensaisEsperadas,
+        margemLucroPercentual
+      } = req.body;
+
+      if (!usuario || !nome || !unidade || !ingredientes) {
         return res.status(400).json({ message: "Campos obrigatórios faltando (usuário, nome, unidade, ingredientes)." });
       }
 
@@ -76,8 +80,12 @@ class ProdutoController {
         nome,
         unidade,
         ingredientes: ingredientesProcessados,
-        margemLucroPercentual: margemLucroPercentual || 20 
-      });      const produtoSalvo = await novoProduto.save();
+        tempoProducaoHoras: Number(tempoProducaoHoras) || 0,
+        vendasMensaisEsperadas: Number(vendasMensaisEsperadas) || 0,
+        margemLucroPercentual: margemLucroPercentual || 20
+      });
+
+      const produtoSalvo = await novoProduto.save();
       res.status(201).json({ message: "Produto cadastrado com sucesso!", item: produtoSalvo });
 
     } catch (erro) {
@@ -100,10 +108,18 @@ class ProdutoController {
     }
   };
 
-  static atualizarProduto = async (req, res) => {
-    try {
-      const id = req.params.id;
-    const dadosAtualizacao = req.body;
+  static atualizarProduto = async (req, res) => {
+    try {
+      const id = req.params.id;
+      const dadosAtualizacao = req.body;
+
+      // If tempoProducaoHoras or vendasMensaisEsperadas are present in update, coerce to number
+      if (dadosAtualizacao.tempoProducaoHoras !== undefined) {
+        dadosAtualizacao.tempoProducaoHoras = Number(dadosAtualizacao.tempoProducaoHoras);
+      }
+      if (dadosAtualizacao.vendasMensaisEsperadas !== undefined) {
+        dadosAtualizacao.vendasMensaisEsperadas = Number(dadosAtualizacao.vendasMensaisEsperadas);
+      }
 
 
       if (dadosAtualizacao.ingredientes) {
@@ -190,11 +206,39 @@ class ProdutoController {
       const totalCustosOp = custosOp.reduce((total, item) => total + item.valorMensal, 0);
       const CFM = totalDespesas + totalCustosOp; // Custo Fixo Mensal Total
 
-      // 4. Custo Total do Produto (CTP)
-      const CTP = custoIngredientes + CFM;
+      // 4. Custo da Hora de Produção (CHP)
+      // usa o valor definido no usuário ou padrão de 176 horas/mês
+      let horasTrabalhadasMes = usuario.horasTrabalhadasMes;
+      if (!horasTrabalhadasMes || horasTrabalhadasMes === 0) {
+        horasTrabalhadasMes = 176; // padrão
+      }
+      const CHP = CFM / horasTrabalhadasMes;
 
-      // 5. Preço de Venda Final (PVF)
-      const margem = produto.margemLucroPercentual / 100;
+      // 5. Custo Fixo do Produto (CFP) — baseado no tempo de produção da unidade
+        // 5. Custo Fixo do Produto (CFP)
+        // - componente dado pelo tempo de produção da unidade: CHP * tempoProducaoHoras
+        // - componente derivado da alocação dos custos fixos mensais por unidade vendida
+        //   (se vendasMensais esperadas forem passadas pela query ?salesVolume=...)
+        // Allow an explicit query param override (?salesVolume=...), otherwise use stored product value
+        const querySales = Number(req.query.salesVolume || req.query.vendasMensais || 0);
+        let vendasMensais = 0;
+        if (querySales && querySales > 0) {
+          vendasMensais = querySales;
+        } else if (produto.vendasMensaisEsperadas && Number(produto.vendasMensaisEsperadas) > 0) {
+          vendasMensais = Number(produto.vendasMensaisEsperadas);
+        } else {
+          vendasMensais = 0;
+        }
+        const overheadPorUnidade = vendasMensais > 0 ? (CFM / vendasMensais) : 0;
+
+        const CFP_tempo = CHP * (produto.tempoProducaoHoras || 0);
+        const CFP = CFP_tempo + overheadPorUnidade;
+
+      // 6. Custo Total do Produto (CTP)
+      const CTP = custoIngredientes + CFP;
+
+      // 7. Preço de Venda Final (PVF)
+      const margem = produto.margemLucroPercentual / 100;
       if (margem >= 1) {
         return res.status(400).json({ message: "Margem de lucro deve ser menor que 100%." });
       }
@@ -205,14 +249,21 @@ class ProdutoController {
       res.status(200).json({
         produtoNome: produto.nome,
         custoIngredientes: parseFloat(custoIngredientes.toFixed(2)),
-        custoFixoProduto: parseFloat(CFM.toFixed(2)),
+        custoFixoProduto: parseFloat(CFP.toFixed(2)),
         custoTotalProduto: parseFloat(CTP.toFixed(2)),
         margemLucroPercentual: produto.margemLucroPercentual,
         precoVendaSugerido: parseFloat(PVF.toFixed(2)),
         detalhesCalculo: {
-          custoFixoMensalTotal: CFM
+            custoFixoMensalTotal: CFM,
+            horasTrabalhadasMes,
+            custoPorHora: parseFloat(CHP.toFixed(2)),
+            tempoProducaoHoras: produto.tempoProducaoHoras || 0,
+            vendasMensaisEsperadas: vendasMensais,
+            overheadPorUnidade: parseFloat(overheadPorUnidade.toFixed(2)),
+            custoFixoPorTempo: parseFloat(CFP_tempo.toFixed(2))
         }
-      });    } catch (erro) {
+      });
+    } catch (erro) {
       console.error("Erro ao calcular preço:", erro);
       res.status(500).json({ message: `Erro ao calcular preço final: ${erro.message}` });
     }

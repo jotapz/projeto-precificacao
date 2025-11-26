@@ -6,7 +6,7 @@ import { FaFilePdf } from "react-icons/fa"; // Certifique-se de ter react-icons 
 
 function PrecificacaoPage() {
   const [selectedProduct, setSelectedProduct] = useState("");
-  const [salesVolume, setSalesVolume] = useState("100");
+  const [salesVolume, setSalesVolume] = useState("");
   const API_URL = "http://localhost:3000/api";
   const userId = localStorage.getItem("userId");
   const [produtos, setProdutos] = useState([]);
@@ -68,6 +68,14 @@ function PrecificacaoPage() {
   );
 
   useEffect(() => {
+    // When a product is selected, if it has a stored vendasMensaisEsperadas use it
+    if (selectedProduct && produtos && produtos.length > 0) {
+      const prod = produtos.find(p => (p._id || p.id) === selectedProduct);
+      if (prod && prod.vendasMensaisEsperadas && Number(prod.vendasMensaisEsperadas) > 0) {
+        setSalesVolume(String(prod.vendasMensaisEsperadas));
+      }
+    }
+
     const fetchCalculo = async () => {
       if (!selectedProduct) {
         setCalculo(null);
@@ -78,7 +86,9 @@ function PrecificacaoPage() {
       try {
         setLoadingCalculo(true);
         setCalculoError(null);
-        const res = await fetch(`${API_URL}/produtos/${selectedProduct}/preco-final`);
+        // include salesVolume (vendas mensais esperadas) so backend can allocate fixed costs per unit
+        const sv = Number(salesVolume) || 0;
+        const res = await fetch(`${API_URL}/produtos/${selectedProduct}/preco-final?salesVolume=${encodeURIComponent(sv)}`);
         if (!res.ok) {
           const body = await res.json().catch(() => ({}));
           throw new Error(body.message || 'Erro ao calcular preço');
@@ -221,6 +231,9 @@ function PrecificacaoPage() {
                 className="form-control"
                 style={{ borderRadius: "6px", borderColor: "#ccc" }}
               />
+              <small style={{ color: '#666' }}>
+                Obs: o cálculo usa o valor "Vendas Mensais Esperadas" cadastrado no produto quando existe — altere este campo para testar um cenário temporário.
+              </small>
             </div>
 
             <hr />
@@ -316,6 +329,9 @@ function PrecificacaoPage() {
                     <small style={{ color: "#999" }}>Detalhes:</small>
                     <ul style={{ marginTop: 6, paddingLeft: 18 }}>
                       <li>Custos fixos mensais: R$ {Number(calculo.detalhesCalculo.custoFixoMensalTotal).toFixed(2)}</li>
+                      <li>Vendas mensais esperadas: {calculo.detalhesCalculo.vendasMensaisEsperadas || 0} unidades</li>
+                      <li>Overhead por unidade (CFM / vendas): R$ {Number(calculo.detalhesCalculo.overheadPorUnidade || 0).toFixed(2)}</li>
+                      <li>Custo fixo por tempo (horas): R$ {Number(calculo.detalhesCalculo.custoFixoPorTempo || 0).toFixed(2)}</li>
                       <li>Horas trabalhadas/mês: {calculo.detalhesCalculo.horasTrabalhadasMes}</li>
                       <li>Custo por hora: R$ {Number(calculo.detalhesCalculo.custoPorHora).toFixed(2)}</li>
                       <li>Tempo produção (h): {calculo.detalhesCalculo.tempoProducaoHoras}</li>

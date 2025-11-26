@@ -9,6 +9,7 @@ const estadoInicialProduto = {
   lucroDesejado: '',
   unidade: 'g',
   tempoProducaoHoras: '',
+  vendasMensaisEsperadas: '',
   ingredientes: [
     { materiaPrimaId: '', quantidade: '', unidade: 'g' } // Começa com 1 linha de ingrediente
   ]
@@ -68,6 +69,7 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
       lucroDesejado: p.margemLucroPercentual || '',
       unidade: p.unidade || 'g',
       tempoProducaoHoras: p.tempoProducaoHoras || '',
+      vendasMensaisEsperadas: p.vendasMensaisEsperadas || '',
       ingredientes: (p.ingredientes || []).map(ing => ({
         materiaPrimaId: (ing.materiaPrima && ing.materiaPrima._id) ? ing.materiaPrima._id : (ing.materiaPrima || ''),
         quantidade: ing.quantidade,
@@ -120,6 +122,7 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
         nome: novoProduto.nome,
         unidade: novoProduto.unidade || 'g',
         tempoProducaoHoras: Number(novoProduto.tempoProducaoHoras) || 0,
+        vendasMensaisEsperadas: Number(novoProduto.vendasMensaisEsperadas) || 0,
         margemLucroPercentual: Number(novoProduto.lucroDesejado) || 20,
         ingredientes: novoProduto.ingredientes.map(ing => ({
           materiaPrima: ing.materiaPrimaId || ing.materiaPrima || ing.nome, // aceitar mp id or fallback
@@ -209,6 +212,8 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
               <div>
                 <span className="fw-bold fs-5">{produto.nome}</span><br/>
                 <small className="text-muted">Lucro Desejado: {produto.margemLucroPercentual ?? produto.lucroDesejado}%</small>
+                <br />
+                <small className="text-muted">Vendas/mês esperadas: {produto.vendasMensaisEsperadas ?? 0} unidades</small>
                 <div className="mt-2">
                   <strong>Ingredientes:</strong>
                   <ul className="mb-0 ps-3">
@@ -297,6 +302,18 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
             </Button>
 
             <hr />
+
+            {/* Vendas Mensais Esperadas */}
+            <Form.Group className="mb-3">
+              <Form.Label>Vendas Mensais Esperadas (unidades)</Form.Label>
+              <Form.Control 
+                type="number"
+                placeholder="Ex: 100"
+                name="vendasMensaisEsperadas"
+                value={novoProduto.vendasMensaisEsperadas}
+                onChange={handleChangeSimples}
+              />
+            </Form.Group>
 
             {/* Lucro Desejado */}
             <Form.Group className="mb-3">
