@@ -74,37 +74,34 @@ function PrecificacaoPage() {
         setSalesVolume(String(prod.vendasMensaisEsperadas));
       }
     }
+  }, [selectedProduct, produtos]);
 
-    const fetchCalculo = async () => {
-      if (!selectedProduct) {
-        setCalculo(null);
-        setCalculoError(null);
-        return;
+  const handleCalcular = async () => {
+    if (!selectedProduct) {
+      setCalculoError('Selecione um produto primeiro');
+      return;
+    }
+
+    try {
+      setLoadingCalculo(true);
+      setCalculoError(null);
+      // include salesVolume (vendas mensais esperadas) so backend can allocate fixed costs per unit
+      const sv = Number(salesVolume) || 0;
+      const res = await fetch(`${API_URL}/produtos/${selectedProduct}/preco-final?salesVolume=${encodeURIComponent(sv)}`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || 'Erro ao calcular preço');
       }
-
-      try {
-        setLoadingCalculo(true);
-        setCalculoError(null);
-        // include salesVolume (vendas mensais esperadas) so backend can allocate fixed costs per unit
-        const sv = Number(salesVolume) || 0;
-        const res = await fetch(`${API_URL}/produtos/${selectedProduct}/preco-final?salesVolume=${encodeURIComponent(sv)}`);
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.message || 'Erro ao calcular preço');
-        }
-        const data = await res.json();
-        setCalculo(data);
-      } catch (err) {
-        console.error('Erro ao buscar cálculo:', err);
-        setCalculoError(err.message || 'Erro desconhecido');
-        setCalculo(null);
-      } finally {
-        setLoadingCalculo(false);
-      }
-    };
-
-    fetchCalculo();
-  }, [selectedProduct]);
+      const data = await res.json();
+      setCalculo(data);
+    } catch (err) {
+      console.error('Erro ao buscar cálculo:', err);
+      setCalculoError(err.message || 'Erro desconhecido');
+      setCalculo(null);
+    } finally {
+      setLoadingCalculo(false);
+    }
+  };
 
   const handleLimpar = () => {
     setSelectedProduct("");
@@ -134,9 +131,9 @@ function PrecificacaoPage() {
       startY: 50,
       head: [['Descrição', 'Valor']],
       body: [
-        ['Custo de Ingredientes', `R$ ${Number(calculo.custoIngredientes).toFixed(2)}`],
-        ['Custo Fixo (por produto)', `R$ ${Number(calculo.custoFixoProduto).toFixed(2)}`],
-        ['Custo Total Unitário', `R$ ${Number(calculo.custoTotalProduto).toFixed(2)}`],
+        ['Custo Variável (ingredientes)', `R$ ${Number(calculo.custoVariavel || 0).toFixed(2)}`],
+        ['Custo Fixo Unitário', `R$ ${Number(calculo.custoFixoUnitario || 0).toFixed(2)}`],
+        ['Custo Total Unitário', `R$ ${Number(calculo.custoTotal || 0).toFixed(2)}`],
         ['Margem de Lucro', `${calculo.margemLucroPercentual}%`],
         ['PREÇO DE VENDA SUGERIDO', `R$ ${Number(calculo.precoVendaSugerido).toFixed(2)}`]
       ],
@@ -157,10 +154,8 @@ function PrecificacaoPage() {
         startY: doc.lastAutoTable.finalY + 20,
         head: [['Parâmetro', 'Valor']],
         body: [
-          ['Custo Fixo Mensal Total', `R$ ${Number(calculo.detalhesCalculo.custoFixoMensalTotal).toFixed(2)}`],
-          ['Horas Trabalhadas/Mês', `${calculo.detalhesCalculo.horasTrabalhadasMes}h`],
-          ['Custo da Hora', `R$ ${Number(calculo.detalhesCalculo.custoPorHora).toFixed(2)}`],
-          ['Tempo de Produção', `${calculo.detalhesCalculo.tempoProducaoHoras}h`]
+          ['Despesas Fixas Mensais', `R$ ${Number(calculo.detalhesCalculo.despesasFixasMensais || 0).toFixed(2)}`],
+          ['Estimativa Vendas Mensal', `${calculo.detalhesCalculo.estimativaVendasMensal || 0} un`]
         ],
         theme: 'striped'
       });
@@ -244,6 +239,15 @@ function PrecificacaoPage() {
               </small>
             </div>
 
+            <button
+              onClick={handleCalcular}
+              disabled={!selectedProduct || loadingCalculo}
+              className="btn btn-primary w-100 mb-3"
+              style={{ borderRadius: "6px" }}
+            >
+              {loadingCalculo ? 'Calculando...' : 'Gerar Cálculo'}
+            </button>
+
             <hr />
 
             <div>
@@ -309,20 +313,20 @@ function PrecificacaoPage() {
 
                 <div style={{ padding: 12, borderRadius: 8, border: "1px solid #eee", background: "#fff" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                    <small style={{ color: "#666" }}>Custo Ingredientes</small>
-                    <strong>R$ {Number(calculo.custoIngredientes).toFixed(2)}</strong>
+                    <small style={{ color: "#666" }}>Custo Variável (ingredientes)</small>
+                    <strong>R$ {Number(calculo.custoVariavel || 0).toFixed(2)}</strong>
                   </div>
 
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                    <small style={{ color: "#666" }}>Custo Fixo do Produto</small>
-                    <strong>R$ {Number(calculo.custoFixoProduto).toFixed(2)}</strong>
+                    <small style={{ color: "#666" }}>Custo Fixo Unitário</small>
+                    <strong>R$ {Number(calculo.custoFixoUnitario || 0).toFixed(2)}</strong>
                   </div>
 
                   <div style={{ height: 1, background: "#eee", margin: "10px 0" }} />
 
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                    <small style={{ color: "#666" }}>Custo Total do Produto</small>
-                    <strong>R$ {Number(calculo.custoTotalProduto).toFixed(2)}</strong>
+                    <small style={{ color: "#666" }}>Custo Total</small>
+                    <strong>R$ {Number(calculo.custoTotal || 0).toFixed(2)}</strong>
                   </div>
 
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
@@ -338,14 +342,23 @@ function PrecificacaoPage() {
                   <div style={{ marginTop: 12 }}>
                     <small style={{ color: "#999" }}>Detalhes:</small>
                     <ul style={{ marginTop: 6, paddingLeft: 18 }}>
-                      <li>Custos fixos mensais: R$ {Number(calculo.detalhesCalculo.custoFixoMensalTotal).toFixed(2)}</li>
-                      <li>Vendas mensais esperadas: {calculo.detalhesCalculo.vendasMensaisEsperadas || 0} unidades</li>
-                      <li>Overhead por unidade (CFM / vendas): R$ {Number(calculo.detalhesCalculo.overheadPorUnidade || 0).toFixed(2)}</li>
-                      <li>Custo fixo por tempo (horas): R$ {Number(calculo.detalhesCalculo.custoFixoPorTempo || 0).toFixed(2)}</li>
-                      <li>Horas trabalhadas/mês: {calculo.detalhesCalculo.horasTrabalhadasMes}</li>
-                      <li>Custo por hora: R$ {Number(calculo.detalhesCalculo.custoPorHora).toFixed(2)}</li>
-                      <li>Tempo produção (h): {calculo.detalhesCalculo.tempoProducaoHoras}</li>
+                      <li>Despesas fixas mensais: R$ {Number(calculo.detalhesCalculo?.despesasFixasMensais || 0).toFixed(2)}</li>
+                      <li>Estimativa vendas mensal: {calculo.detalhesCalculo?.estimativaVendasMensal || 0} unidades</li>
+                      <li>Custo fixo por unidade: R$ {Number(calculo.custoFixoUnitario || 0).toFixed(2)}</li>
                     </ul>
+                    
+                    {calculo.detalhesCalculo?.ingredientesDetalhados && calculo.detalhesCalculo.ingredientesDetalhados.length > 0 && (
+                      <>
+                        <small style={{ color: "#999", marginTop: 12, display: "block" }}>Ingredientes (custo variável):</small>
+                        <ul style={{ marginTop: 6, paddingLeft: 18, fontSize: "0.85rem" }}>
+                          {calculo.detalhesCalculo.ingredientesDetalhados.map((ing, idx) => (
+                            <li key={idx}>
+                              {ing.nome}: {ing.quantidade} {ing.unidade} = R$ {ing.custoUnitario.toFixed(2)}
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

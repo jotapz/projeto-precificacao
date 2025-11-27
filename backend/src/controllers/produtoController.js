@@ -59,14 +59,14 @@ class ProdutoController {
             throw new Error(`Matéria-prima com ID ${ing.materiaPrima} não encontrada.`);
           }
 
-          // normalize units and convert provided quantity to MP unit when calculating cost
-          const providedUnit = ProdutoController._normalizeUnit(ing.unidade) || ProdutoController._normalizeUnit(mp.unidade);
-          const mpUnit = ProdutoController._normalizeUnit(mp.unidade);
-          const quantidadeForCost = ProdutoController._convertQuantity(Number(ing.quantidade), providedUnit, mpUnit);
+          // normalize units and convert provided quantity to MP unit when calculating cost
+          const providedUnit = ProdutoController._normalizeUnit(ing.unidade) || ProdutoController._normalizeUnit(mp.unidade);
+          const mpUnit = ProdutoController._normalizeUnit(mp.unidade);
+          const quantidadeForCost = ProdutoController._convertQuantity(Number(ing.quantidade), providedUnit, mpUnit);
 
-          const custoIngrediente = mp.valorUnitario * quantidadeForCost;
-
-          return {
+          // Calcular custo por unidade da matéria-prima (valorUnitario é o preço da embalagem)
+          const custoPorUnidade = mp.valorUnitario / (mp.quantidade || 1);
+          const custoIngrediente = custoPorUnidade * quantidadeForCost;            const custoIngrediente = custoPorUnidade * quantidadeForCost;          return {
             materiaPrima: ing.materiaPrima,
             quantidade: Number(ing.quantidade),
             unidade: providedUnit,
@@ -177,98 +177,93 @@ class ProdutoController {
     }
   };
   
-  static calcularPrecoFinal = async (req, res) => {
-    try {
-      const produtoId = req.params.id;
+  static calcularPrecoFinal = async (req, res) => {
+    try {
+      const produtoId = req.params.id;
 
-      // 1. Buscar o Produto e popular o usuário
-      const produto = await Produto.findById(produtoId).populate('usuario');
-      if (!produto) {
-        return res.status(404).json({ message: "Produto não encontrado." });
-      }
+      // 1. Buscar o Produto e popular o usuário
+      const produto = await Produto.findById(produtoId).populate('usuario');
+      if (!produto) {
+        return res.status(404).json({ message: "Produto não encontrado." });
+      }
 
-      const usuario = produto.usuario;
-      if (!usuario) {
-        return res.status(404).json({ message: "Usuário do produto não encontrado." });
-      }
+      const usuario = produto.usuario;
+      if (!usuario) {
+        return res.status(404).json({ message: "Usuário do produto não encontrado." });
+      }
 
-      // 2. Custo Variável (Soma dos Ingredientes)
-      const custoIngredientes = produto.ingredientes.reduce(
+      // 2. Custo Variável (soma dos ingredientes)
+      const custoVariavel = produto.ingredientes.reduce(
         (total, ing) => total + ing.custoIngrediente, 
         0
       );
 
-      // 3. Custos Fixos Mensais (CFM)
+      // Popular matéria prima para mostrar detalhes no debug
+      await produto.populate('ingredientes.materiaPrima');
+
+      // 3. Despesas Fixas Mensais
       const despesas = await Despesa.find({ usuario: usuario._id });
       const custosOp = await CustoOperacional.find({ usuario: usuario._id });
       
       const totalDespesas = despesas.reduce((total, item) => total + item.valorMensal, 0);
       const totalCustosOp = custosOp.reduce((total, item) => total + item.valorMensal, 0);
-      const CFM = totalDespesas + totalCustosOp; // Custo Fixo Mensal Total
+      const despesasFixasMensais = totalDespesas + totalCustosOp;
 
-      // 4. Custo da Hora de Produção (CHP)
-      // usa o valor definido no usuário ou padrão de 176 horas/mês
-      let horasTrabalhadasMes = usuario.horasTrabalhadasMes;
-      if (!horasTrabalhadasMes || horasTrabalhadasMes === 0) {
-        horasTrabalhadasMes = 176; // padrão
+      // 4. Estimativa de Vendas Mensais
+      // Permite sobrescrever via query param ?salesVolume=..., senão usa o valor salvo no produto
+      const querySales = Number(req.query.salesVolume || req.query.vendasMensais || 0);
+      let estimativaVendasMensal = 0;
+      if (querySales && querySales > 0) {
+        estimativaVendasMensal = querySales;
+      } else if (produto.vendasMensaisEsperadas && Number(produto.vendasMensaisEsperadas) > 0) {
+        estimativaVendasMensal = Number(produto.vendasMensaisEsperadas);
+      } else {
+        estimativaVendasMensal = 0;
       }
-      const CHP = CFM / horasTrabalhadasMes;
 
-      // 5. Custo Fixo do Produto (CFP) — baseado no tempo de produção da unidade
-        // 5. Custo Fixo do Produto (CFP)
-        // - componente dado pelo tempo de produção da unidade: CHP * tempoProducaoHoras
-        // - componente derivado da alocação dos custos fixos mensais por unidade vendida
-        //   (se vendasMensais esperadas forem passadas pela query ?salesVolume=...)
-        // Allow an explicit query param override (?salesVolume=...), otherwise use stored product value
-        const querySales = Number(req.query.salesVolume || req.query.vendasMensais || 0);
-        let vendasMensais = 0;
-        if (querySales && querySales > 0) {
-          vendasMensais = querySales;
-        } else if (produto.vendasMensaisEsperadas && Number(produto.vendasMensaisEsperadas) > 0) {
-          vendasMensais = Number(produto.vendasMensaisEsperadas);
-        } else {
-          vendasMensais = 0;
-        }
-        const overheadPorUnidade = vendasMensais > 0 ? (CFM / vendasMensais) : 0;
+      // 5. Custo Fixo Unitário (rateio das despesas fixas por unidade vendida)
+      const custoFixoUnitario = estimativaVendasMensal > 0 ? (despesasFixasMensais / estimativaVendasMensal) : 0;
 
-        const CFP_tempo = CHP * (produto.tempoProducaoHoras || 0);
-        const CFP = CFP_tempo + overheadPorUnidade;
+      // 6. Custo Total do Produto
+      const custoTotal = custoVariavel + custoFixoUnitario;
 
-      // 6. Custo Total do Produto (CTP)
-      const CTP = custoIngredientes + CFP;
+      // 7. Taxas Totais (margem de lucro + impostos + taxas de cartão, etc.)
+      // Por enquanto, usa apenas a margem de lucro; futuramente adicionar impostos e taxaCartao
+      const margemLucroDesejada = produto.margemLucroPercentual || 0;
+      const impostosPorcentagem = 0; // TODO: adicionar campo no produto ou usuário
+      const taxaCartaoPorcentagem = 0; // TODO: adicionar campo no produto ou usuário
+      
+      const taxasTotais = (impostosPorcentagem + taxaCartaoPorcentagem + margemLucroDesejada) / 100;
+      
+      if (taxasTotais >= 1) {
+        return res.status(400).json({ message: "A soma das taxas (impostos + taxas + margem) deve ser menor que 100%." });
+      }
 
-      // 7. Preço de Venda Final (PVF)
-      const margem = produto.margemLucroPercentual / 100;
-      if (margem >= 1) {
-        return res.status(400).json({ message: "Margem de lucro deve ser menor que 100%." });
-      }
-      
-      const PVF = CTP / (1 - margem);
-
+      // 8. Preço de Venda Técnico
+      const precoVendaTecnico = taxasTotais > 0 ? (custoTotal / (1 - taxasTotais)) : custoTotal;
 
       res.status(200).json({
         produtoNome: produto.nome,
-        custoIngredientes: parseFloat(custoIngredientes.toFixed(2)),
-        custoFixoProduto: parseFloat(CFP.toFixed(2)),
-        custoTotalProduto: parseFloat(CTP.toFixed(2)),
-        margemLucroPercentual: produto.margemLucroPercentual,
-        precoVendaSugerido: parseFloat(PVF.toFixed(2)),
+        custoVariavel: parseFloat(custoVariavel.toFixed(2)),
+        custoFixoUnitario: parseFloat(custoFixoUnitario.toFixed(2)),
+        custoTotal: parseFloat(custoTotal.toFixed(2)),
+        margemLucroPercentual: margemLucroDesejada,
+        precoVendaSugerido: parseFloat(precoVendaTecnico.toFixed(2)),
         detalhesCalculo: {
-            custoFixoMensalTotal: CFM,
-            horasTrabalhadasMes,
-            custoPorHora: parseFloat(CHP.toFixed(2)),
-            tempoProducaoHoras: produto.tempoProducaoHoras || 0,
-            vendasMensaisEsperadas: vendasMensais,
-            overheadPorUnidade: parseFloat(overheadPorUnidade.toFixed(2)),
-            custoFixoPorTempo: parseFloat(CFP_tempo.toFixed(2))
+          despesasFixasMensais: parseFloat(despesasFixasMensais.toFixed(2)),
+          estimativaVendasMensal: estimativaVendasMensal,
+          ingredientesDetalhados: produto.ingredientes.map(ing => ({
+            nome: ing.materiaPrima?.nome || 'N/A',
+            quantidade: ing.quantidade,
+            unidade: ing.unidade,
+            custoUnitario: parseFloat(ing.custoIngrediente.toFixed(2))
+          }))
         }
       });
     } catch (erro) {
-      console.error("Erro ao calcular preço:", erro);
-      res.status(500).json({ message: `Erro ao calcular preço final: ${erro.message}` });
-    }
-  };
-
-}
+      console.error("Erro ao calcular preço:", erro);
+      res.status(500).json({ message: `Erro ao calcular preço final: ${erro.message}` });
+    }
+  };}
 
 export default ProdutoController;

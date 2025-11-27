@@ -145,9 +145,6 @@ function Perfil() {
               <Badge bg="success" className="px-3 py-2 rounded-pill mb-4">Conta Ativa</Badge>
 
               <div className="d-grid gap-2">
-                <Button variant="outline-primary" className="fw-bold rounded-pill">
-                  Alterar Senha
-                </Button>
                 <Button variant="outline-danger" className="fw-bold rounded-pill border-0" onClick={handleLogout}>
                   Sair da Conta
                 </Button>
