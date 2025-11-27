@@ -37,7 +37,7 @@ class UserController {  // --- LOGIN (Autenticar) ---
   // --- CREATE (Cadastrar) ---
   static cadastrarUsuario = async (req, res) => {
     try {
-      const { nome, email, senha, confirmarSenha, bairro, cpf } = req.body;
+      const { nome, email, senha, confirmarSenha, bairro, cpf, tipoNegocio } = req.body;
 
       // Valida se as senhas são iguais
       if (senha !== confirmarSenha) {
@@ -72,6 +72,7 @@ class UserController {  // --- LOGIN (Autenticar) ---
         senha: senhaHash,
         bairro,
         cpf: cpf ? cpf.replace(/\D/g, '') : undefined,
+        tipoNegocio: tipoNegocio || ''
       });      const usuarioSalvo = await novoUsuario.save();
     
       const usuarioParaRetorno = await User.findById(usuarioSalvo._id).select('-senha');

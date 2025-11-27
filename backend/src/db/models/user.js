@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema(
       unique: true,
       sparse: true // permite null/undefined e mantém unique para valores não-nulos
     },
+    tipoNegocio: {
+      type: String,
+      required: false,
+      enum: ['pastelaria', 'pizzaria', ''], // valores permitidos do frontend
+      default: ''
+    },
     horasTrabalhadasMes: { 
       type: Number, 
       default: 176 // (Padrão de 8h/dia, 22 dias/mês)

@@ -1,3 +1,4 @@
+export const PROFILE_IMAGE = "https:cdn-icons-png.flaticon.com/512/149/149071.png";
 import "bootstrap/dist/css/bootstrap.min.css";
 import React, { useState, useRef, useEffect } from "react";
 import { FaChevronDown, FaUser } from "react-icons/fa"; 

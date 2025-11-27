@@ -25,7 +25,6 @@ function Login() {
       if (res.ok) {
         localStorage.setItem('userId', data.usuario._id);
         localStorage.setItem('usuario', JSON.stringify(data.usuario)); 
-        alert(data.message || "Login realizado com sucesso!");
         navigate("/SistemaPrec"); 
       } else {
         alert(data.message || "Falha ao logar");

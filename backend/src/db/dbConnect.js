@@ -14,11 +14,7 @@ async function conectaNaDatabase() {
   console.log('[DB] Usando MONGO_URI (preview):', preview);
 
   try {
-    const conn = await mongoose.connect(uri, {
-      // options are not strictly required with mongoose >=6, but leave here for clarity
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const conn = await mongoose.connect(uri);
 
     mongoose.connection.on('connected', () => {
       console.log('[DB] Conectado ao MongoDB com sucesso.');
