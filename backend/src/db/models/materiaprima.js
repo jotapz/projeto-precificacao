@@ -24,7 +24,7 @@ const materiaPrimaSchema = new mongoose.Schema(
     unidade: {
       type: String,
       required: true,
-      enum: ['kg', 'g', 'L', 'ml'] // Só aceita esses valores exatos
+      enum: ['kg', 'g', 'L', 'ml', 'unidade'] // Só aceita esses valores exatos
     }
   },
   { 

@@ -313,7 +313,7 @@ function AdminDashboard() {
                         <tr>
                           <th>Nome</th>
                           <th>Email</th>
-                          <th>Bairro</th>
+                          <th>Tipo de Negócio</th>
                           <th className="text-end">Ações</th>
                         </tr>
                       </thead>
@@ -325,7 +325,7 @@ function AdminDashboard() {
                             <tr key={user._id}>
                               <td className="fw-bold text-dark">{user.nome}</td>
                               <td className="text-muted small">{user.email}</td>
-                              <td><Badge bg="light" text="dark" className="border">{user.bairro || "N/A"}</Badge></td>
+                              <td><Badge bg="info" text="white">{user.tipoNegocio || "N/A"}</Badge></td>
                               <td className="text-end">
                                 <Button variant="link" className="p-0 me-3" onClick={() => abrirDetalhes(user)}>
                                   <FaEye color="#044CF4" />
@@ -439,6 +439,7 @@ function AdminDashboard() {
               <h5 className="fw-bold mb-3">{usuarioSelecionado.nome}</h5>
               <div className="bg-light p-3 rounded-3 mb-3">
                 <p className="mb-1"><strong>Email:</strong> {usuarioSelecionado.email}</p>
+                <p className="mb-1"><strong>Tipo de Negócio:</strong> {usuarioSelecionado.tipoNegocio || "-"}</p>
                 <p className="mb-1"><strong>CPF:</strong> {usuarioSelecionado.cpf || "-"}</p>
                 <p className="mb-0"><strong>Bairro:</strong> {usuarioSelecionado.bairro || "-"}</p>
               </div>

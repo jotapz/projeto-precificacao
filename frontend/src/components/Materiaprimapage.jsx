@@ -239,6 +239,7 @@ function Materiaprimapage() {
                   <option value="g">Grama (g)</option>
                   <option value="L">Litro (L)</option>
                   <option value="ml">Mililitro (ml)</option>
+                  <option value="unidade">Unidade (un)</option>
                 </Form.Select>
               </Form.Group>
 
