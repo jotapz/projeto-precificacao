@@ -66,7 +66,9 @@ class ProdutoController {
 
           // Calcular custo por unidade da matéria-prima (valorUnitario é o preço da embalagem)
           const custoPorUnidade = mp.valorUnitario / (mp.quantidade || 1);
-          const custoIngrediente = custoPorUnidade * quantidadeForCost;            const custoIngrediente = custoPorUnidade * quantidadeForCost;          return {
+          const custoIngrediente = custoPorUnidade * quantidadeForCost;
+
+          return {
             materiaPrima: ing.materiaPrima,
             quantidade: Number(ing.quantidade),
             unidade: providedUnit,
