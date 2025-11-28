@@ -8,7 +8,6 @@ function HeaderProfile() {
   const [showMenu, setShowMenu] = useState(false);
   const profileRef = useRef(null);
   
-  // Inicia com null para renderizar ícone padrão se falhar
   const [iniciais, setIniciais] = useState(null); 
 
   useEffect(() => {
@@ -21,7 +20,6 @@ function HeaderProfile() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // --- LÓGICA DE INICIAIS ---
   useEffect(() => {
     try {
       const usuarioStorage = localStorage.getItem("usuario");
@@ -34,7 +32,7 @@ function HeaderProfile() {
 
       if (usuarioStorage) {
         const dados = JSON.parse(usuarioStorage);
-        nome = dados.nome || dados.name || ""; // Tenta 'nome' ou 'name'
+        nome = dados.nome || dados.name || ""; 
       } else if (adminStorage) {
         const dados = JSON.parse(adminStorage);
         nome = dados.nome || "Admin";
@@ -42,16 +40,14 @@ function HeaderProfile() {
 
       if (nome && nome.trim().length > 0) {
         const partes = nome.trim().split(" ");
-        // Pega 1ª letra do primeiro nome
         let letras = partes[0].charAt(0).toUpperCase();
         
-        // Se tiver sobrenome, pega a 1ª dele também
         if (partes.length > 1) {
           letras += partes[1].charAt(0).toUpperCase();
         }
         setIniciais(letras);
       } else {
-        setIniciais(null); // Sem nome -> vai mostrar ícone
+        setIniciais(null); 
       }
 
     } catch (error) {
@@ -83,7 +79,6 @@ function HeaderProfile() {
             <ul className="navbar-nav align-items-center">
               <li className="nav-item position-relative">
                 
-                {/* BOTÃO DO PERFIL */}
                 <div 
                   className="d-flex align-items-center gap-2 p-1 pe-3 rounded-pill"
                   style={{ 
@@ -96,13 +91,11 @@ function HeaderProfile() {
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "transparent"}
                 >
                   
-                  {/* BOLA DO AVATAR */}
                   <div 
                     className="d-flex justify-content-center align-items-center rounded-circle border shadow-sm"
                     style={{ 
                       width: "45px", 
                       height: "45px", 
-                      // Fundo Azul forte para garantir contraste
                       backgroundColor: "#044CF4", 
                       color: "#FFFFFF",
                       fontSize: "1.1rem",
@@ -110,7 +103,6 @@ function HeaderProfile() {
                       letterSpacing: "-1px"
                     }}
                   >
-                    {/* Se tiver iniciais, mostra elas. Se não, mostra ícone de user */}
                     {iniciais ? iniciais : <FaUser size={18} />}
                   </div>
 

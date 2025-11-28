@@ -4,17 +4,15 @@ import { useNavigate } from 'react-router-dom';
 
 const estadoInicialFormulario = {
   nome: '',
-  valorMensal: ''  // Alterado de 'valor' para 'valorMensal' para corresponder ao backend
+  valorMensal: '' 
 };
 
 const API_URL = 'http://localhost:3000/api';
 
 function CustosPage() {
   const navigate = useNavigate();
-  // Recupera o ID do usuário do localStorage
   const userId = localStorage.getItem('userId');
 
-  // Se não houver userId, redireciona para login
   useEffect(() => {
     if (!userId) {
       alert('Você precisa fazer login para acessar esta página');
@@ -26,7 +24,6 @@ function CustosPage() {
   const [despesas, setDespesas] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Carregar custos e despesas ao montar o componente
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -81,7 +78,6 @@ function CustosPage() {
   const handleShowModalEditar = (type, index) => {
     const itemParaEditar = type === 'custo' ? custos[index] : despesas[index];
     
-    // Prepara o formulário com os dados existentes
     setFormData({
       nome: itemParaEditar.nome,
       valorMensal: itemParaEditar.valorMensal.toString()
@@ -118,7 +114,6 @@ function CustosPage() {
 
       let response;
       if (editingIndex !== null) {
-        // Editar item existente
         const itemId = currentType === 'custo' 
           ? custos[editingIndex]._id 
           : despesas[editingIndex]._id;
@@ -130,7 +125,6 @@ function CustosPage() {
           body: JSON.stringify(item)
         });
       } else {
-        // Criar novo item
         console.log('Criando novo item');
         response = await fetch(`${API_URL}/${endpoint}`, {
           method: 'POST',
@@ -146,7 +140,6 @@ function CustosPage() {
         throw new Error(`Erro ao salvar: ${responseData.message || 'Erro desconhecido'}`);
       }
 
-      // Recarregar a lista após sucesso
       const listResponse = await fetch(`${API_URL}/${endpoint}/user/${userId}`);
       const updatedList = await listResponse.json();
       console.log('Lista atualizada:', updatedList);
@@ -178,7 +171,6 @@ function CustosPage() {
         throw new Error('Erro ao excluir');
       }
 
-      // Atualizar estado local após exclusão bem-sucedida
       const setList = type === 'custo' ? setCustos : setDespesas;
       setList(prevList => prevList.filter((_, idx) => idx !== index));
     } catch (error) {

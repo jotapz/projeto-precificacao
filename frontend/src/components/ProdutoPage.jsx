@@ -3,22 +3,19 @@ import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
 
 const API_URL = 'http://localhost:3000/api';
 
-// Estado inicial para um novo produto
 const estadoInicialProduto = {
   nome: '',
   lucroDesejado: '',
   unidade: 'g',
   tempoProducaoHoras: '',
   ingredientes: [
-    { materiaPrimaId: '', quantidade: '', unidade: 'g' } // Começa com 1 linha de ingrediente
+    { materiaPrimaId: '', quantidade: '', unidade: 'g' } 
   ]
 };
 
-// Recebe 'materiasPrimas' como prop para popular o dropdown
 function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
   const userId = localStorage.getItem('userId');
 
-  // --- ESTADOS ---
   const [produtos, setProdutos] = useState([]);
   const [novoProduto, setNovoProduto] = useState(estadoInicialProduto);
   const [showModal, setShowModal] = useState(false);
@@ -26,7 +23,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
   const [materiasPrimas, setMateriasPrimas] = useState(materiasPrimasProp);
   const [loading, setLoading] = useState(true);
 
-  // carregar matérias-primas e produtos do backend
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -47,7 +43,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
     if (userId) fetchData();
   }, [materiasPrimasProp, userId]);
 
-  // --- FUNÇÕES DO MODAL ---
   const handleClose = () => {
     setShowModal(false);
     setNovoProduto(estadoInicialProduto);
@@ -62,7 +57,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
 
   const handleShowEditar = (index) => {
     const p = produtos[index];
-    // map product from backend to form shape
     const mapped = {
       nome: p.nome || '',
       lucroDesejado: p.margemLucroPercentual || '',
@@ -79,15 +73,12 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
     setShowModal(true);
   };
 
-  // --- FUNÇÕES DO FORMULÁRIO ---
   
-  // Atualiza campos simples (nome, lucro)
   const handleChangeSimples = (e) => {
     const { name, value } = e.target;
     setNovoProduto(prev => ({ ...prev, [name]: value }));
   };
 
-  // Atualiza uma linha específica de ingrediente
   const handleIngredienteChange = (index, e) => {
     const { name, value } = e.target;
     const ingredientesAtualizados = [...novoProduto.ingredientes];
@@ -95,7 +86,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
     setNovoProduto(prev => ({ ...prev, ingredientes: ingredientesAtualizados }));
   };
 
-  // Adiciona uma nova linha de ingrediente
   const handleAddIngrediente = () => {
     setNovoProduto(prev => ({
       ...prev,
@@ -103,7 +93,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
     }));
   };
 
-  // Remove uma linha de ingrediente
   const handleRemoveIngrediente = (index) => {
     setNovoProduto(prev => ({
       ...prev,
@@ -111,10 +100,8 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
     }));
   };
 
-  // Salva (Adiciona ou Edita) -> envia para o backend
   const handleSubmit = async () => {
     try {
-      // montar payload conforme backend espera: ingredientes com materiaPrima id e quantidade
       const payload = {
         usuario: userId,
         nome: novoProduto.nome,
@@ -130,7 +117,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
 
       let res;
       if (editingIndex !== null && produtos[editingIndex] && produtos[editingIndex]._id) {
-        // atualizar
         const id = produtos[editingIndex]._id;
         res = await fetch(`${API_URL}/produtos/${id}`, {
           method: 'PUT',
@@ -138,7 +124,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
           body: JSON.stringify(payload)
         });
       } else {
-        // criar
         res = await fetch(`${API_URL}/produtos`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -149,7 +134,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Erro ao salvar produto');
 
-      // reload produtos
       const prodRes = await fetch(`${API_URL}/produtos/user/${userId}`);
       if (prodRes.ok) setProdutos(await prodRes.json());
 
@@ -160,7 +144,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
     }
   };
 
-  // Exclui um produto
   const handleExcluir = async (index) => {
     try {
       const id = produtos[index]._id;
@@ -174,14 +157,12 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
     }
   };
 
-  // calcular preco final chamando backend
   const handleCalcularPreco = async (index) => {
     try {
       const id = produtos[index]._id;
       const res = await fetch(`${API_URL}/produtos/${id}/preco-final`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Erro ao calcular preço');
-      // mostrar resultado simples
       alert(`Preço sugerido: R$ ${data.precoVendaSugerido} (Custo total: R$ ${data.custoTotalProduto})`);
     } catch (err) {
       console.error('Erro ao calcular preço:', err);
@@ -189,7 +170,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
     }
   };
 
-  // --- RENDERIZAÇÃO ---
   return (
     <div className="container-fluid fade-in" style={{ maxWidth: "1200px", justifyContent: "center" }}>
       <div className="d-flex justify-content-between align-items-center mt-4">
@@ -199,7 +179,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
         </Button>
       </div>
       
-      {/* LISTA DE PRODUTOS */}
       <div className="p-4 rounded shadow w-100 mt-3" style={{ minHeight: '100px', maxWidth: "1200px", backgroundColor: "#FFFFFF" }}>
         {produtos.length === 0 ? (
           <p className="text-secondary text-center">Nenhum Produto cadastrado.</p>
@@ -227,14 +206,12 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
         )}
       </div>
 
-      {/* MODAL DE PRODUTO */}
       <Modal show={showModal} onHide={handleClose} centered size="lg">
         <Modal.Header closeButton>
           <Modal.Title>{editingIndex !== null ? 'Editar' : 'Adicionar'} Produto</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
-            {/* Nome do Produto */}
             <Form.Group className="mb-3">
               <Form.Label>Nome do Produto</Form.Label>
               <Form.Control 
@@ -246,7 +223,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
               />
             </Form.Group>
 
-            {/* Ingredientes Dinâmicos */}
             <Form.Label>Ingredientes</Form.Label>
             {novoProduto.ingredientes.map((ingrediente, index) => (
               <Row key={index} className="mb-2 g-2 align-items-center">
@@ -299,7 +275,6 @@ function ProdutoPage({ materiasPrimas: materiasPrimasProp = [] }) {
 
             <hr />
 
-            {/* Lucro Desejado */}
             <Form.Group className="mb-3">
               <Form.Label>Lucro Desejado (%)</Form.Label>
               <Form.Control 

@@ -8,7 +8,6 @@ function Materiaprimapage() {
   const navigate = useNavigate();
   const userId = localStorage.getItem('userId');
 
-  // Redirecionar para login se não houver userId
   useEffect(() => {
     if (!userId) {
       alert('Você precisa fazer login para acessar esta página');
@@ -23,10 +22,9 @@ function Materiaprimapage() {
     nome: "",
     quantidade: 0,
     unidade: "kg",
-    valorUnitario: 0.0  // Alterado de valor para valorUnitario para corresponder ao backend
+    valorUnitario: 0.0 
   });
 
-  // Carregar matérias-primas do usuário
   useEffect(() => {
     const fetchMaterias = async () => {
       try {
@@ -77,7 +75,6 @@ function Materiaprimapage() {
         usuario: userId
       });
 
-        // Garantir que os campos numéricos sejam enviados como numbers
         const payload = {
           ...novoMaterial,
           quantidade: Number(novoMaterial.quantidade),
@@ -109,7 +106,6 @@ function Materiaprimapage() {
         throw new Error(data.message || 'Erro ao salvar matéria-prima');
       }
 
-      // Recarregar a lista após salvar
     const listResponse = await fetch(`${API_URL}/materiasprimas/user/${userId}`);
       const updatedList = await listResponse.json();
   setMateriasPrimas(updatedList);
@@ -137,7 +133,6 @@ function Materiaprimapage() {
         throw new Error(error.message || 'Erro ao excluir matéria-prima');
       }
 
-      // Atualizar lista local após excluir
       setMateriasPrimas(materiasPrimas.filter(item => item._id !== id));
     } catch (error) {
       console.error('Erro ao excluir:', error);
@@ -257,7 +252,6 @@ function Materiaprimapage() {
               />
             </Form.Group>
 
-            {/* Apenas um conjunto de campos: nome, quantidade, unidade, valorUnitario */}
           </Form>
         </Modal.Body>
         <Modal.Footer>

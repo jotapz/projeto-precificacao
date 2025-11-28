@@ -5,7 +5,6 @@ function CardMateria() {
     <div className="card border-info mb-3" style={{ maxWidth: "18rem" }}>
       <div className="card-header d-flex align-items-center justify-content-between">
         Matéria-Prima
-        {/* ícone via classe bi (garanta import bootstrap-icons no main.jsx) */}
         <i
           className="bi bi-info-circle"
           data-bs-toggle="tooltip"

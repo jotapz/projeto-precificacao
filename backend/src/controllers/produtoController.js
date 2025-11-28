@@ -211,8 +211,7 @@ class ProdutoController {
       const totalCustosOp = custosOp.reduce((total, item) => total + item.valorMensal, 0);
       const despesasFixasMensais = totalDespesas + totalCustosOp;
 
-      // 4. Estimativa de Vendas Mensais
-      // Permite sobrescrever via query param ?salesVolume=..., senão usa o valor salvo no produto
+     
       const querySales = Number(req.query.salesVolume || req.query.vendasMensais || 0);
       let estimativaVendasMensal = 0;
       if (querySales && querySales > 0) {
@@ -223,17 +222,13 @@ class ProdutoController {
         estimativaVendasMensal = 0;
       }
 
-      // 5. Custo Fixo Unitário (rateio das despesas fixas por unidade vendida)
       const custoFixoUnitario = estimativaVendasMensal > 0 ? (despesasFixasMensais / estimativaVendasMensal) : 0;
 
-      // 6. Custo Total do Produto
       const custoTotal = custoVariavel + custoFixoUnitario;
 
-      // 7. Taxas Totais (margem de lucro + impostos + taxas de cartão, etc.)
-      // Por enquanto, usa apenas a margem de lucro; futuramente adicionar impostos e taxaCartao
       const margemLucroDesejada = produto.margemLucroPercentual || 0;
-      const impostosPorcentagem = 0; // TODO: adicionar campo no produto ou usuário
-      const taxaCartaoPorcentagem = 0; // TODO: adicionar campo no produto ou usuário
+      const impostosPorcentagem = 0; 
+      const taxaCartaoPorcentagem = 0; 
       
       const taxasTotais = (impostosPorcentagem + taxaCartaoPorcentagem + margemLucroDesejada) / 100;
       
@@ -241,7 +236,6 @@ class ProdutoController {
         return res.status(400).json({ message: "A soma das taxas (impostos + taxas + margem) deve ser menor que 100%." });
       }
 
-      // 8. Preço de Venda Técnico
       const precoVendaTecnico = taxasTotais > 0 ? (custoTotal / (1 - taxasTotais)) : custoTotal;
 
       res.status(200).json({

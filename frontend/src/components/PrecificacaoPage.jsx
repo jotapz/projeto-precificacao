@@ -67,7 +67,6 @@ function PrecificacaoPage() {
   );
 
   useEffect(() => {
-    // When a product is selected, if it has a stored vendasMensaisEsperadas use it
     if (selectedProduct && produtos && produtos.length > 0) {
       const prod = produtos.find(p => (p._id || p.id) === selectedProduct);
       if (prod && prod.vendasMensaisEsperadas && Number(prod.vendasMensaisEsperadas) > 0) {
@@ -85,7 +84,6 @@ function PrecificacaoPage() {
     try {
       setLoadingCalculo(true);
       setCalculoError(null);
-      // include salesVolume (vendas mensais esperadas) so backend can allocate fixed costs per unit
       const sv = Number(salesVolume) || 0;
       const res = await fetch(`${API_URL}/produtos/${selectedProduct}/preco-final?salesVolume=${encodeURIComponent(sv)}`);
       if (!res.ok) {

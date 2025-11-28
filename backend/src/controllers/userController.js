@@ -1,28 +1,24 @@
 import User from "../db/models/user.js"; 
 import bcrypt from "bcrypt";
 
-class UserController {  // --- LOGIN (Autenticar) ---
+class UserController {  
   static login = async (req, res) => {
     try {
       const { email, senha } = req.body;
 
-      // 1. Busca o usuário pelo email
       const usuario = await User.findOne({ email });
       if (!usuario) {
         return res.status(401).json({ message: "Email ou senha incorretos." });
       }
 
-      // 2. Compara a senha enviada com a hash armazenada
       const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
       if (!senhaCorreta) {
         return res.status(401).json({ message: "Email ou senha incorretos." });
       }
 
-      // 3. Remove a senha antes de enviar o usuário na resposta
       const usuarioSemSenha = usuario.toObject();
       delete usuarioSemSenha.senha;
 
-      // 4. Retorna os dados do usuário (exceto a senha)
       res.status(200).json({ 
         message: "Login realizado com sucesso!",
         usuario: usuarioSemSenha
@@ -34,28 +30,23 @@ class UserController {  // --- LOGIN (Autenticar) ---
     }
   };
 
-  // --- CREATE (Cadastrar) ---
   static cadastrarUsuario = async (req, res) => {
     try {
       const { nome, email, senha, confirmarSenha, bairro, cpf, tipoNegocio } = req.body;
 
-      // Valida se as senhas são iguais
       if (senha !== confirmarSenha) {
         return res.status(400).json({ message: "As senhas não conferem." });
       }
 
-      // Valida força da senha
       if (senha.length < 6) {
         return res.status(400).json({ message: "A senha deve ter no mínimo 6 caracteres." });
       }
 
-      // Validação básica de email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         return res.status(400).json({ message: "Email inválido." });
       }
 
-      // Se CPF foi fornecido, valida o formato
       if (cpf) {
         const cpfLimpo = cpf.replace(/\D/g, '');
         if (cpfLimpo.length !== 11) {
@@ -115,7 +106,7 @@ class UserController {  // --- LOGIN (Autenticar) ---
   static atualizarUsuario = async (req, res) => {
     try {
       const id = req.params.id;
-      const dadosAtualizacao = req.body;      // Medida de segurança: não permitir atualização de senha por esta rota
+      const dadosAtualizacao = req.body;      
       if (dadosAtualizacao.senha) {
         delete dadosAtualizacao.senha;
       }
